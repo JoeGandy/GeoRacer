@@ -1,0 +1,66 @@
+#lobby{
+	padding-top:40px;
+}
+
+.lobby_buttons a{
+    width:80%;
+    margin-bottom:10px;
+    text-align: left;
+}
+
+#lobby .row:first-of-type{
+    padding-bottom:50px;
+}
+
+#lobby .row:nth-of-type(2){
+    height:80%;
+}
+
+.lobby_left{
+	height:100%;
+	max-height:800px;
+	position:relative;
+}
+
+#lobby .align_right{
+    padding-right:20px;
+}
+
+.lobby_players a{
+    width:80%;
+    margin-bottom:10px;
+    text-align: right;
+}
+
+.btn-default {
+    background-color: #BBB;
+    border-color: #BBB;
+}
+
+.btn-default:hover, .btn-default:active {
+    background-color: #999;
+    border-color: #999;
+}
+
+.lobby_chat{
+}
+
+.lobby_chat .output{
+	border:1px solid #AAA;
+	border-bottom:none;
+	height:300px;
+	overflow-y:auto;
+}
+
+.lobby_chat .inputbox, .lobby_chat .sendbutton{
+	padding:0;
+}
+
+.lobby_chat .inputbox input{
+	width:100%;
+	height:31px;
+}
+
+.lobby_chat .sendbutton .btn{
+	width:100%;
+}

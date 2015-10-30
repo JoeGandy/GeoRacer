@@ -1,0 +1,45 @@
+
+.business-header {
+    height: 500px;
+    background: url('../img/bg.jpg') center center no-repeat scroll;
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    background-size: cover;
+    -o-background-size: cover;
+    opacity:1;
+}
+
+.tagline {
+    text-shadow: 0 0 10px #000;
+    color: #fff;
+    position:relative;
+    min-height:400px;
+}
+.tagline h1{
+    font-size:6em;
+}
+
+.tagline h1,.tagline h3{
+    position: absolute;
+    bottom: 0;
+    display:block;
+    float:left;
+    vertical-align: bottom;
+}
+.tagline h3{
+    left:400px;
+    bottom: 12px;
+    opacity:0.7;
+}
+.info_panel{
+    padding:10px;
+}
+
+.info_panel h3{
+    text-align:center;
+    padding-bottom:10px;
+}
+
+footer {
+    margin: 50px 0;
+}
