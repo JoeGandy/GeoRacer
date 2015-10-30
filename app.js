@@ -6,15 +6,6 @@ var jade = require('jade');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-
-
-
-var Lobbies = [
-];
-
-var Players = [
-];
-
 function updateGUI(){
     //io.emit('updateGUI', [Lobbies, Players, Players.length]);
 }
@@ -40,6 +31,12 @@ function getPlayerLobby(player_id){
     return false;
     */
 }
+
+var Lobbies = [];
+
+
+var find_private = 0, find_public = 1, ingame = 2;
+var Players = new Array([],[],[]);
 
 
 app.get('/', function(req, res){
@@ -70,23 +67,43 @@ app.get('/about', function(req, res){
 app.use(express.static(path.join(__dirname, 'public')));
 
 io.on('connection', function(socket){
-    console.log("connected");
-    /*
-    Players.push(socket.id);
-    updateGUI();
+    //Page =  0/Find Private Game     1/Find public game    2/InGame
+    var active_page = parseInt(socket.handshake.query.page);
+    switch(active_page){
+        case find_private: //Find Private Game
+            Players[find_private].push(socket.id);
+
+            //Before we find a lobby we need to verify all users are here with a ping request of some kind
+
+            //Find a private lobby here
+        break;
+        case find_public: //Find Public Game
+            Players[find_public].push(socket.id);
+
+            //Before we find a lobby we need to verify all users are here with a ping request of some kind
+
+            //Find a public lobby here
+        break;
+        case ingame: //InGame
+            Players[ingame].push(socket.id);
+
+            //In Game code here
+        break;
+        default: //Unkown Origin
+            console.log("Unkown location");
+
+        break;
+    }
+
+    console.log(Players);
 
     socket.on('disconnect', function(){
-        for(var x = 0; x < Lobbies.length; x++ ){
-            var index = Lobbies[x].players.indexOf(socket.id);
+        for(var x = 0; x < 3; x++){
+            var index = Players[x].indexOf(socket.id);
             if (index > -1) {
-                Lobbies[x].players.splice(index, 1);
+                Players[x].splice(index, 1);
             }
         }
-        var index = Players.indexOf(socket.id);
-        if (index > -1) {
-            Players.splice(index, 1);
-        }
-        updateGUI();
     });
 
     socket.on('join_lobby', function(lobby_id){
@@ -114,7 +131,7 @@ io.on('connection', function(socket){
         }
     });
 });
-
+/*
 
 setInterval(
     function(){
@@ -128,9 +145,9 @@ setInterval(
                 Lobbies[x].player_2_score = 0;
             }
         };
-*/
 },100);
 
+*/
 http.listen(25565, function(){
     console.log('listening on *:25565');
 });
