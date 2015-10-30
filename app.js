@@ -1,8 +1,13 @@
-var express = require('express'),app = express();
+var express = require('express'), app = express();
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
 var path = require('path');
-
+var jade = require('jade'); 
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+
+
+
 
 var Lobbies = [
 ];
@@ -38,13 +43,34 @@ function getPlayerLobby(player_id){
 
 
 app.get('/', function(req, res){
-    res.sendfile('public/index.html');
+    res.render('index.html');
 });
+
+
+app.get('/lobby/:lobby_id', function(req, res) {
+    //res.send("lobby_id is set to " + req.params.lobby_id);
+    res.render('lobby');
+});
+
+
+app.get('/find_public_game', function(req, res){
+    res.render('find_public_game');
+});
+
+app.get('/find_private_game', function(req, res){
+    res.render('find_private_game');
+});
+
+app.get('/about', function(req, res){
+    res.render('about');
+});
+
 
 
 app.use(express.static(path.join(__dirname, 'public')));
 
 io.on('connection', function(socket){
+    console.log("connected");
     /*
     Players.push(socket.id);
     updateGUI();

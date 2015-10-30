@@ -1,0 +1,22 @@
+    <% include ../views/partials/header.ejs %>
+	    <div class="container">
+	        <div class="row">
+	        	<div class="col-md-6 col-md-offset-3 finding_game">
+	        		<h3>We're finding you a game now</h3>
+	        		<img src="img/ajax-loader.gif"/>
+	        		<h4 id="status"></h4>
+	        	</div>
+	        </div>
+	    </div>
+	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	    <script src="js/bootstrap.min.js"></script>
+	    <script>
+			setTimeout(function(){
+				$("#status").text("We've found you a game, taking you there now...");
+				setTimeout(function(){
+					window.location.href = "lobby/546456";
+				}, 1000); 
+			}, 1000); 
+	   	</script>
+	</body>
+</html>
