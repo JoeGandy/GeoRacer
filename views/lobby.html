@@ -25,30 +25,67 @@
 		        			<div class="col-xs-12 output">
 		        			</div>
 		        			<div class="col-xs-10 inputbox">
-		        				<input type="text"/>
+		        				<input id="chat_input" type="text"/>
 		        			</div>
 		        			<div class="col-xs-2 sendbutton">
-		        				<a href="#" class="btn btn-sm btn-primary">Send</a>
+		        				<a href="#" id="send_message" class="btn btn-sm btn-primary">Send</a>
 		        			</div> 
 		        		</div>
 		        	</div>
 	        	</div>
 	        	<div class="col-xs-3 col-xs-offset-1 lobby_players">
-	        		<a href="#" class="btn btn-sm btn-primary">Player 1 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 2 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 3 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 4 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 5 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 6 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 7 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 8 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 9 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 10 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 11 name</a>
-	        		<a href="#" class="btn btn-sm btn-default">Player 12 name</a>
+	        		<a href="#" id="player_name" class="btn btn-sm btn-primary">Player 1 name</a>
+	        		<div class="other_users">
+	        			
+	        		</div>
 	        	</div>
 	    </div>
-	    <script src="js/jquery.js"></script>
-	    <script src="js/bootstrap.min.js"></script>
+	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	    <script src="/js/bootstrap.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	    <script>
+	    	$(document).ready(function(){
+	    		//prompt user for their name
+			    var username = prompt("Please enter your name", "Joe");
+			    while (username == "" || username == null) {
+			    	//Maybe add verfication to ensure username doesnt already exsists (extra)
+			        username = prompt("Please enter your name", "Joe");
+			    }
+
+			    //Show their name in the blue box
+			    $("#player_name").text(username);
+
+			    //get lobby id from url
+		    	var lobby_id = parseInt(window.location.pathname.split( '/' )[2]);
+
+		    	//open socket
+			  	var socket = io.connect(window.location.origin,{query:'page=2&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
+
+			  	//add to right pannel when a player joins
+			  	socket.on('player_joined', function(result){
+			  		var players_name = result.username;
+					$(".other_users").append("<a href=\"#\" class=\"btn btn-sm btn-default "+players_name+"\">"+ players_name + "</a>")
+			  	});
+
+			  	//remove from right pannel when a player leaves
+			  	socket.on('player_left', function(result){
+			  		var players_name = result.username;
+					$("." + players_name).remove();
+			  	});
+
+			  	$("#send_message").click(function(e){
+			  		var input = $("#chat_input").val();
+			  		if(input == null || input == "")
+    					return;
+    				$("#chat_input").val('').focus();
+			  			
+
+
+			  		console.log(input);
+			  	});
+	    	});
+
+
+		</script>
 	</body>
 </html>

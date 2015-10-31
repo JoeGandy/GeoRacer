@@ -10,10 +10,18 @@
 	        </div>
 	    </div>
 	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-	    <script src="js/bootstrap.min.js"></script>
+	    <script src="/js/bootstrap.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 	    <script>
 		  	var socket = io.connect(window.location.origin,{query:'page=1'}); //page=1 means show we're looking for public lobby
+
+		  	socket.on('join_lobby', function(result){
+		  		var lobby_id = result.id;
+				$("#status").text("We've found you a game, taking you there now...");
+				setTimeout(function(){
+					window.location.href = "lobby/" + lobby_id;
+				}, 1000); 
+		  	});
 
 		  	/*
 			setTimeout(function(){
