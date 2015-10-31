@@ -1,3 +1,4 @@
+    <!-- Using ejs to import template block -->
     <% include ../views/partials/header.ejs %>
 	    <div class="container">
 	        <div class="row">
@@ -10,13 +11,17 @@
 	    </div>
 	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 	    <script src="js/bootstrap.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
 	    <script>
+		  	var socket = io.connect(window.location.origin,{query:'page=1'}); //page=1 means show we're looking for public lobby
+
+		  	/*
 			setTimeout(function(){
 				$("#status").text("We've found you a game, taking you there now...");
 				setTimeout(function(){
-					window.location.href = "lobby/546456";
+					window.location.href = "lobby/123123";
 				}, 1000); 
-			}, 1000); 
+			}, 1000); */
 	   	</script>
 	</body>
 </html>
