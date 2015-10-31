@@ -17,7 +17,7 @@
 		        			<a href="#" class="btn btn-sm btn-danger">Leave Game</a>
 		        		</div>
 		        		<div class="col-xs-6">
-		        			A short paragraph explaining how to play the game incase somone misses it on the homepage
+		        			Please note that the game is not currently working and is purely for lobby functionality demonstration
 		        		</div>
 		        	</div>
 	        		<div class="row">
@@ -28,13 +28,13 @@
 		        				<input id="chat_input" type="text"/>
 		        			</div>
 		        			<div class="col-xs-2 sendbutton">
-		        				<a href="#" id="send_message" class="btn btn-sm btn-primary">Send</a>
+		        				<a id="send_message" class="btn btn-sm btn-primary">Send</a>
 		        			</div> 
 		        		</div>
 		        	</div>
 	        	</div>
 	        	<div class="col-xs-3 col-xs-offset-1 lobby_players">
-	        		<a href="#" id="player_name" class="btn btn-sm btn-primary">Player 1 name</a>
+	        		<a id="player_name" class="btn btn-sm btn-primary">Player 1 name</a>
 	        		<div class="other_users">
 	        			
 	        		</div>
@@ -64,7 +64,7 @@
 			  	//add to right pannel when a player joins
 			  	socket.on('player_joined', function(result){
 			  		var players_name = result.username;
-					$(".other_users").append("<a href=\"#\" class=\"btn btn-sm btn-default "+players_name+"\">"+ players_name + "</a>")
+					$(".other_users").append("<a class=\"btn btn-sm btn-default "+players_name+"\">"+ players_name + "</a>")
 			  	});
 
 			  	//remove from right pannel when a player leaves
@@ -73,12 +73,29 @@
 					$("." + players_name).remove();
 			  	});
 
+			  	//remove from right pannel when a player leaves
+			  	socket.on('lobby_message_s', function(result){
+			  		console.log(result);
+			  		$(".lobby_chat .output").html($(".lobby_chat .output").html() + result.username + " : " + result.input + "<br>");
+			  	});
+
+			  	$("#chat_input").keyup(function(event){
+				    if(event.keyCode == 13){
+				        $("#send_message").click();
+				    }
+				});
+
 			  	$("#send_message").click(function(e){
+			  		//Get chat message
 			  		var input = $("#chat_input").val();
 			  		if(input == null || input == "")
     					return;
+    				//Clear old chat message and focus back onto the input box
     				$("#chat_input").val('').focus();
-			  			
+    				
+    				socket.emit('lobby_message_c', { input : input, username : $("#player_name").text(), lobby_id : lobby_id});
+			  		
+
 
 
 			  		console.log(input);

@@ -50,6 +50,8 @@
 	border-bottom:none;
 	height:300px;
 	overflow-y:auto;
+    padding:7px;
+    line-height: 100%;
 }
 
 .lobby_chat .inputbox, .lobby_chat .sendbutton{
