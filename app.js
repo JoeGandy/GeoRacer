@@ -163,19 +163,20 @@ io.on('connection', function(socket){
 
     socket.on('disconnect', function(){
         for(var x = Public_Lobbies.length -1; x > -1; x--){
-            Public_Lobbies[x].players.forEach(function(e, index){
-                if(e.socket_id == socket.id){
-                    if (index > -1) {
-                        var  username = Public_Lobbies[x].players[Public_Lobbies[x].players.indexOf(e)].username;
-                        Public_Lobbies[x].players.splice(Public_Lobbies[x].players.indexOf(e), 1);
-                        Public_Lobbies[x].players.forEach(function(e, index){
-                            io.to(e.socket_id).emit('player_left', { username : username});
-                            io.to(e.socket_id).emit('lobby_message_s', { username : username, input : " >> has left the lobby << "});
-                        });
+            if(Public_Lobbies[x].players > 0){
+                Public_Lobbies[x].players.forEach(function(e, index){
+                    if(e.socket_id == socket.id){
+                        if (index > -1) {
+                            var  username = Public_Lobbies[x].players[Public_Lobbies[x].players.indexOf(e)].username;
+                            Public_Lobbies[x].players.splice(Public_Lobbies[x].players.indexOf(e), 1);
+                            Public_Lobbies[x].players.forEach(function(e, index){
+                                io.to(e.socket_id).emit('player_left', { username : username});
+                                io.to(e.socket_id).emit('lobby_message_s', { username : username, input : " >> has left the lobby << "});
+                            });
+                        }
                     }
-                }
-
-            });
+                });
+            }
         }
         for(var x = 0; x < 3; x++){
             var index = Players[x].indexOf(socket.id);
