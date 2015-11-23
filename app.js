@@ -35,6 +35,7 @@ function getPlayerLobby(player_id){
 }
 
 function lobby(type){
+    this.id = Math.random().toString(36).substring(7); //unused at the moment
     this.type = type;   //O == private, 1 == public
     this.open = 1;      //1 == open, 0 == not open
     this.state = 1;     //0 == ingame, 1 == lobby
@@ -44,6 +45,7 @@ function lobby(type){
 function player(socket_id, username){
     this.socket_id = socket_id;
     this.username = username;
+    this.in_game = 0;
 }
 
 var find_private = 0, find_public = 1, inlobby = 2, ingame = 3;
@@ -63,6 +65,11 @@ app.get('/lobby/:lobby_id', function(req, res) {
     res.render('lobby', {lobby_id : req.params.lobby_id});
 });
 
+
+app.get('/ingame/:game_id', function(req, res) {
+    //res.send("lobby_id is set to " + req.params.lobby_id);
+    res.render('ingame', {lobby_id : req.params.lobby_id});
+});
 
 app.get('/find_public_game', function(req, res){
     res.render('find_public_game');
@@ -92,12 +99,14 @@ io.on('connection', function(socket){
             //Find a private lobby here
         break;
         case find_public: //Find Public Game
-            Players[find_public].push(socket.id);
+            //socket.id
 
             //Before we find a lobby we need to verify all users are here with a ping request of some kind
-            console.log("Finding an open lobby");
+
+            //Ensure that there is space for this person in a lobby
+            console.log("Finding space in a open lobby");
             var lobby_id = -1;
-            for(var x = Public_Lobbies.length -1; x > -1; x--){
+            for(var x = (Public_Lobbies.length - 1); x >= 0; x--){
                 if(Public_Lobbies[x].players.length < settings.max_players){
                     lobby_id = x;
                 }
@@ -108,18 +117,13 @@ io.on('connection', function(socket){
                 break;
             }
 
-            Players[find_public].forEach(function(socketId, index){
-                Public_Lobbies[lobby_id].players.push(socketId);
-                if(Public_Lobbies[lobby_id].players.length >= settings.min_players){
-                    //Start this lobby
-                    Public_Lobbies[lobby_id].open = 0;
-                    Public_Lobbies[lobby_id].players.forEach(function(socket_id, index){
-                        io.to(socket_id).emit('join_lobby', { id:lobby_id });
-                    });
-                    Public_Lobbies[lobby_id].players.length = 0;
-                }
-            });
-           Players[find_public].length = 0;
+            
+            console.log("If there is space, add the user to that lobby");
+            
+            Public_Lobbies[lobby_id].open = 0;
+
+            io.to(socket.id).emit('join_lobby', { id:lobby_id });
+
             //Find a public lobby here
         break;
         case inlobby: //InLobby
@@ -143,7 +147,6 @@ io.on('connection', function(socket){
             //In Game code here
         break;
         case ingame: //InGame
-            Players[ingame].push(socket.id);
 
             //In Game code here
         break;
@@ -158,12 +161,12 @@ io.on('connection', function(socket){
     console.log("Public Lobbies");
     //console.log(Public_Lobbies);
         for(var x = Public_Lobbies.length -1; x > -1; x--){
-            console.log(Public_Lobbies[x].players);
+            console.log(Public_Lobbies[x]);
         }
 
     socket.on('disconnect', function(){
         for(var x = Public_Lobbies.length -1; x > -1; x--){
-            if(Public_Lobbies[x].players > 0){
+            if(Public_Lobbies[x].state == 1){
                 Public_Lobbies[x].players.forEach(function(e, index){
                     if(e.socket_id == socket.id){
                         if (index > -1) {
@@ -186,11 +189,43 @@ io.on('connection', function(socket){
         }
     });
 
+    socket.on('start_game', function(obj){
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            Public_Lobbies[obj.lobby_id].open = 0;
+            Public_Lobbies[obj.lobby_id].state = 0;
+            io.to(e.socket_id).emit('s_start_game', obj );
+        });
+    });
+
     socket.on('lobby_message_c', function(obj){
         Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
             io.to(e.socket_id).emit('lobby_message_s', obj );
         });
+    });
 
+    socket.on('joined_game', function(obj){
+        var socket_id = obj.socket_id;
+        var username = obj.username;
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            if(username == e.username){
+                //update their socket id to match the new one
+                Public_Lobbies[obj.lobby_id].players[index].socket_id = socket.id;
+                Public_Lobbies[obj.lobby_id].players[index].lat = obj.lat;
+                Public_Lobbies[obj.lobby_id].players[index].lng = obj.lng;
+                Public_Lobbies[obj.lobby_id].players[index].in_game = 1;
+            }
+        });
+
+    });
+
+    socket.on('update_my_position', function(obj){
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            if(e.socket_id == socket.id){
+                Public_Lobbies[obj.lobby_id].players[index].loc = obj.loc;
+            }else{
+                io.to(e.socket_id).emit('update_player', { username : obj.username, lat : obj.lat,  lng : obj.lng} );
+            }
+        });
     });
 });
 

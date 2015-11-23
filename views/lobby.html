@@ -12,7 +12,7 @@
 	        	<div class="col-xs-8 lobby_left">
 	        		<div class="row">
 		        		<div class="col-xs-5 lobby_buttons">
-		        			<a href="ingame.html" class="btn btn-sm btn-primary">Start Game</a>
+		        			<a id="start_game" href="" class="btn btn-sm btn-primary">Start Game</a>
 		        			<a href="#" class="btn btn-sm btn-primary">Invite Player</a>
 		        			<a href="#" class="btn btn-sm btn-danger">Leave Game</a>
 		        		</div>
@@ -79,6 +79,12 @@
 			  		$(".lobby_chat .output").html($(".lobby_chat .output").html() + result.username + " : " + result.input + "<br>");
 			  	});
 
+			  	//remove from right pannel when a player leaves
+			  	socket.on('s_start_game', function(result){
+					localStorage.setItem("username", username);
+    				window.location = "/ingame/" + lobby_id;
+			  	});
+
 			  	$("#chat_input").keyup(function(event){
 				    if(event.keyCode == 13){
 				        $("#send_message").click();
@@ -96,6 +102,10 @@
     				socket.emit('lobby_message_c', { input : input, username : $("#player_name").text(), lobby_id : lobby_id});
 			  		
 			  		console.log(input);
+			  	});
+
+			  	$("#start_game").click(function(e){
+    				socket.emit('start_game', { lobby_id : lobby_id});
 			  	});
 	    	});
 
