@@ -25,16 +25,24 @@ var map;
 var marker_array = new Array();
 
 function initialize() {
-var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
-var username = localStorage.getItem("username");
+	//Get our username from previous page
+	var username = localStorage.getItem("username");
+	//Set up socket connection, stating where we are from and our username
+	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
+	//Currently a static start location, will be automatic in future
   	var start_loc = {lat: 40.7206374, lng: -74.000835};
+
+  	//Let the server know we are ready
   	socket.emit('joined_game', { lobby_id : lobby_id, username : username, loc : start_loc});
 
+  	//Setup the minimap
   	map = new google.maps.Map(document.getElementById('mini_map_container'), {
     	center: start_loc,
-    	zoom: 14
+    	zoom: 15
   	});
+
+  	//Setup the streetview
   	panorama = new google.maps.StreetViewPanorama(
       	document.getElementById('street_view_container'), {
         	position: start_loc,
@@ -42,21 +50,24 @@ var username = localStorage.getItem("username");
           		heading: 34,
           		pitch: 0
         	}
-      	});
-		panorama.addListener('position_changed', function() {
-			var lat = panorama.getPosition().lat();
-			var lng = panorama.getPosition().lng();
-  			socket.emit('update_my_position', { username : username, lat : lat, lng : lng, lobby_id : lobby_id});
-		});
+    });
+  	
+  	//Let people know when we have changed location
+	panorama.addListener('position_changed', function() {
+		var lat = panorama.getPosition().lat();
+		var lng = panorama.getPosition().lng();
+		map.setCenter({lat: lat, lng: lng});
+  		socket.emit('update_my_position', { username : username, lat : lat, lng : lng, lobby_id : lobby_id});
+	});
+
+  	//Bind this panorama to the minimap
   	map.setStreetView(panorama);
 
 	socket.on('update_player', function(result){
 		var players_name = result.username;
-		var lat = result.lat;
-		var lng = result.lng;
-  		var lat_lng = {lat: lat, lng: lng};
+  		var lat_lng = {lat: result.lat, lng: result.lng};
 		var result = $.grep(marker_array, function(e){ return e.title == players_name; });
-		console.log("UPDATE for " + players_name + " You are " + username);
+		//If no marker yet, set one up
 		if(result.length == 0){
 			marker_array[marker_array.length] = new google.maps.Marker({
 		      	position: lat_lng,
@@ -64,9 +75,15 @@ var username = localStorage.getItem("username");
 		      	icon: 'http://www.fapcia.com/images/map_pin_1.png',
 		      	title: players_name
 		  	});
-			marker.push({username : players_name, loc : lat_long})
-		} else if (result.length == 1) {
+			marker_array[marker_array.length] = new google.maps.Marker({
+		      	position: lat_lng,
+		      	map: map,
+		      	icon: 'http://www.fapcia.com/images/map_pin_1.png',
+		      	title: players_name
+		  	});
+		} else if (result.length > 0) { //else update the current markers we have
 			result[0].setPosition(lat_lng);
+			result[1].setPosition(lat_lng);
 		}
 	});
 }

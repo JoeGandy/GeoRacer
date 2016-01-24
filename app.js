@@ -158,10 +158,10 @@ io.on('connection', function(socket){
 
     //console.log("Players:");
     //console.log(Players);
-    console.log("Public Lobbies");
+   // console.log("Public Lobbies");
     //console.log(Public_Lobbies);
         for(var x = Public_Lobbies.length -1; x > -1; x--){
-            console.log(Public_Lobbies[x]);
+           // console.log(Public_Lobbies[x]);
         }
 
     socket.on('disconnect', function(){
@@ -206,8 +206,10 @@ io.on('connection', function(socket){
     socket.on('joined_game', function(obj){
         var socket_id = obj.socket_id;
         var username = obj.username;
+        var found = false;
         Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
             if(username == e.username){
+                found = true;
                 //update their socket id to match the new one
                 Public_Lobbies[obj.lobby_id].players[index].socket_id = socket.id;
                 Public_Lobbies[obj.lobby_id].players[index].lat = obj.lat;
@@ -215,6 +217,17 @@ io.on('connection', function(socket){
                 Public_Lobbies[obj.lobby_id].players[index].in_game = 1;
             }
         });
+        console.log(found);
+        if(!found){
+            var players_length =  Public_Lobbies[obj.lobby_id].players.length;
+            Public_Lobbies[obj.lobby_id].players.push({});
+            Public_Lobbies[obj.lobby_id].players[players_length].username = obj.username;
+            Public_Lobbies[obj.lobby_id].players[players_length].socket_id = socket.id;
+            Public_Lobbies[obj.lobby_id].players[players_length].lat = obj.lat;
+            Public_Lobbies[obj.lobby_id].players[players_length].lng = obj.lng;
+            Public_Lobbies[obj.lobby_id].players[players_length].in_game = 1;
+        }
+        console.log(Public_Lobbies[obj.lobby_id].players);
 
     });
 
