@@ -28,7 +28,7 @@ function initialize() {
 var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 var username = localStorage.getItem("username");
 
-  	var start_loc = {lat: 52.952995, lng: -1.186652};
+  	var start_loc = {lat: 40.7206374, lng: -74.000835};
   	socket.emit('joined_game', { lobby_id : lobby_id, username : username, loc : start_loc});
 
   	map = new google.maps.Map(document.getElementById('mini_map_container'), {
