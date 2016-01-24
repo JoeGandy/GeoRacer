@@ -203,6 +203,12 @@ io.on('connection', function(socket){
         });
     });
 
+    socket.on('ingame_message_c', function(obj){
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            io.to(e.socket_id).emit('ingame_message_s', obj );
+        });
+    });
+
     socket.on('joined_game', function(obj){
         var socket_id = obj.socket_id;
         var username = obj.username;

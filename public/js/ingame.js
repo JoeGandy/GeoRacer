@@ -3,15 +3,21 @@ $(document).ready(function(){
 		if($(this).data("toggle") == "show"){
 			$($(this).data('target')).hide();
 			$(this).addClass($(this).data('addclass'));
-			$(this).text($(this).data('showtext'));
+			$(this).html($(this).data('showtext'));
 			$(this).data("toggle", "hide");
 			//hide
 		}else{
 			$($(this).data('target')).show();
 			$(this).removeClass($(this).data('addclass'));
-			$(this).text($(this).data('hidetext'));
+			$(this).html($(this).data('hidetext'));
 			$(this).data("toggle", "show");
 			//show
+		}
+	});
+
+	$("#toggle_chat").click(function(){
+		if($(this).data("toggle") == "show"){
+			new_message_count = 0;
 		}
 	});
 
@@ -23,6 +29,8 @@ var panorama;
 var map;
 
 var marker_array = new Array();
+
+var new_message_count = 0;
 
 /*
 	Rome targets:
@@ -148,4 +156,33 @@ function initialize() {
 			result[1].setPosition(lat_lng);
 		}
 	});
+
+  	//Add new message to the chat box
+  	//Also shows a little notification on the toggle chat button
+  	socket.on('ingame_message_s', function(result){
+  		console.log(result);
+  		var output = "<span class=\"message\"><span class=\"name\">" + result.username + "</span>: <span class=\"content\">" + result.input + "</span></span></span><br>"
+  		$(".game_chat .output").html($(".game_chat .output").html() + output);
+  		if($("#toggle_chat").data('toggle') === "hide"){
+  			new_message_count++;
+  			$("#toggle_chat").html("Show Chat - " + new_message_count + " New <span class=\"glyphicon glyphicon-exclamation-sign\" aria-hidden=\"true\"></span>");
+  		}
+  	});
+
+  	//Allow users to press enter to submit message
+  	$("#chat_input").keyup(function(event){
+	    if(event.keyCode == 13) $("#send_message").click();
+	});
+
+  	//Send message by clicking the button
+  	$("#send_message").click(function(e){
+  		//Get chat message
+  		var input = $("#chat_input").val();
+  		if(input == null || input == "") return;
+    	
+    	//Clear old chat message and focus back onto the input box
+    	$("#chat_input").val('').focus();
+    	
+    	socket.emit('ingame_message_c', { input : input, username : username, lobby_id : lobby_id});
+  	});
 }
