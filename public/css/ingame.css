@@ -141,3 +141,39 @@
 	width:75%;
 	z-index:101;
 }
+
+
+
+@media (min-width: 769px) and (max-width: 992px) {
+	.game_window .minimap {
+		width:50%;
+	}
+	#toggle_minmap{
+		position: absolute;
+		right:0;
+		top:0;
+		width:50%;
+		z-index:102;
+	}
+}
+
+@media (max-width: 768px) {
+	.game_window .minimap {
+		width:100%;
+	}
+	#toggle_minmap{
+		position: absolute;
+		right:0;
+		top:0;
+		width:100%;
+		z-index:102;
+	}
+	.objective_box > div > h4 {
+		padding:0;
+		margin:0;
+	}
+	.objective_box{
+		background-color:#444;
+		height:90px;
+	}
+}

@@ -1,5 +1,5 @@
 $(document).ready(function(){
-	$(".toggle_target").click(function(){
+	$("body").on('click', '.toggle_target', function(){
 		if($(this).data("toggle") == "show"){
 			$($(this).data('target')).hide();
 			$(this).addClass($(this).data('addclass'));
@@ -29,6 +29,8 @@ var panorama;
 var map;
 
 var marker_array = new Array();
+
+var markers = {};
 
 var new_message_count = 0;
 
@@ -127,18 +129,51 @@ function initialize() {
   	rectangle.setMap(map);
 
 	socket.on('update_player', function(result){
+		update_player(result);
+	});
+
+	socket.on('player_left', function(result){
+		markers[result.socket_id]['panorama'].setMap(null);
+		markers[result.socket_id]['map'].setMap(null);
+
+		delete markers[result.socket_id];
+	});
+
+	socket.on('get_other_players', function(result){
+		$.each(result, function( index, value ) {
+			update_player(value);
+		});
+	});
+
+	socket.on('player_has_joined', function(result){
 		var players_name = result.username;
+		var socket_id = result.socket_id;
   		var lat_lng = {lat: result.lat, lng: result.lng};
-		var result = $.grep(marker_array, function(e){ return e.title == players_name; });
-		//If no marker yet, set one up
-		if(result.length == 0){
-			marker_array[marker_array.length] = new google.maps.Marker({
+		if(!markers[socket_id]) {
+			markers[socket_id] = {};
+			markers[socket_id]['panorama'] = new MarkerWithLabel({
+				animation: google.maps.Animation.DROP,
 		      	position: lat_lng,
 		      	map: panorama,
-		      	icon: 'http://www.fapcia.com/images/map_pin_1.png',
-		      	title: players_name
+			    icon: {
+			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+			      	scale: 13,
+			      	rotation: 0,
+			      	strokeColor: "rgba(25, 25, 25, 0.73)",
+				    fillColor: "rgba(25, 25, 25, 0.73)",
+				    fillOpacity:1
+			    },
+		      	title: socket_id,
+       			labelContent: players_name,
+       			labelAnchor: new google.maps.Point(25, -5),
+		       	labelClass: "labels", // the CSS class for the label
+		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
 		  	});
-			marker_array[marker_array.length] = new google.maps.Marker({
+			markers[socket_id]['map'] = new MarkerWithLabel({
+				animation: google.maps.Animation.DROP,
+				text: 'test',
+				fontSize: 20,
+				align: 'center',
 		      	position: lat_lng,
 		      	map: map,
 			    icon: {
@@ -149,18 +184,18 @@ function initialize() {
 				    fillColor: "rgba(25, 25, 25, 0.73)",
 				    fillOpacity:1
 			    },
-		      	title: players_name
+		      	title: socket_id,
+       			labelContent: players_name,
+       			labelAnchor: new google.maps.Point(25, 38),
+		       	labelClass: "labels", // the CSS class for the label
+		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
 		  	});
-		} else if (result.length > 0) { //else update the current markers we have
-			result[0].setPosition(lat_lng);
-			result[1].setPosition(lat_lng);
 		}
 	});
 
   	//Add new message to the chat box
   	//Also shows a little notification on the toggle chat button
   	socket.on('ingame_message_s', function(result){
-  		console.log(result);
   		var output = "<span class=\"message\"><span class=\"name\">" + result.username + "</span>: <span class=\"content\">" + result.input + "</span></span></span><br>"
   		$(".game_chat .output").html($(".game_chat .output").html() + output);
   		if($("#toggle_chat").data('toggle') === "hide"){
@@ -185,4 +220,57 @@ function initialize() {
     	
     	socket.emit('ingame_message_c', { input : input, username : username, lobby_id : lobby_id});
   	});
+
+	function update_player(result){
+		var socket_id = result.socket_id;
+		var players_name = result.username;
+  		var lat_lng = {lat: result.lat, lng: result.lng};
+		//If no marker yet, set one up
+		if(!markers[socket_id]) {
+			markers[socket_id] = {};
+			markers[socket_id]['panorama'] = new MarkerWithLabel({
+				animation: google.maps.Animation.DROP,
+		      	position: lat_lng,
+		      	map: panorama,
+			    icon: {
+			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+			      	scale: 13,
+			      	rotation: 0,
+			      	strokeColor: "rgba(25, 25, 25, 0.73)",
+				    fillColor: "rgba(25, 25, 25, 0.73)",
+				    fillOpacity:1
+			    },
+		      	title: socket_id,
+       			labelContent: players_name,
+       			labelAnchor: new google.maps.Point(25, -5),
+		       	labelClass: "labels", // the CSS class for the label
+		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
+		  	});
+			markers[socket_id]['map'] = new MarkerWithLabel({
+				animation: google.maps.Animation.DROP,
+				text: 'test',
+				fontSize: 20,
+				align: 'center',
+		      	position: lat_lng,
+		      	map: map,
+			    icon: {
+			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+			      	scale: 4,
+			      	rotation: 0,
+			      	strokeColor: "rgba(25, 25, 25, 0.73)",
+				    fillColor: "rgba(25, 25, 25, 0.73)",
+				    fillOpacity:1
+			    },
+		      	title: socket_id,
+       			labelContent: players_name,
+       			labelAnchor: new google.maps.Point(25, 38),
+		       	labelClass: "labels", // the CSS class for the label
+		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
+		  	});
+		} else { //else update the current markers we have
+			console.log(lat_lng);
+			markers[socket_id]['panorama'].setPosition(lat_lng);
+			markers[socket_id]['map'].setPosition(lat_lng);
+		}
+	}
 }

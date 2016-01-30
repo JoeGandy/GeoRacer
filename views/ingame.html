@@ -1,7 +1,7 @@
 <% include ../views/partials/header.ejs %>
 	    <div id="street_view_container" class="game_window">
 	    	<div class="row-fluid">
-	    		<div class="col-md-3 remove_pad">
+	    		<div class="col-md-3 remove_pad hidden-sm hidden-xs">
 	    			<!--
 			    	<div class="menu_dropdown dropdown">
 					  	<button class="btn btn-primary btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -16,13 +16,13 @@
 					</div>
 				-->
 				</div>
-	    		<div class="col-md-5 remove_pad">
+	    		<div class="col-md-5 remove_pad objective_box">
 			    	<div class="objective">
 			    		<h4><span>Your current objective is:</span></h4>
 			    		<h3><span>Find the nearest restaurant</span></h3>
 			    	</div>
 			    </div>
-	    		<div class="col-md-3 col-md-offset-1 remove_pad ">
+	    		<div class="col-md-3 col-md-offset-1 col-sm-12 col-sm-offset-0 remove_pad ">
 	    			<a class="btn btn-xs btn-primary toggle_target" id="toggle_minmap" data-toggle="show" data-target=".minimap" data-addclass="show_minimap_button" data-showtext="Show Map" data-hidetext="Hide Map">Hide Map</a>
 			    	<div id="mini_map_container" class="minimap">
 			    	</div>
@@ -75,11 +75,11 @@
 			</div>
 	    </div>
 	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-	    <script src="js/bootstrap.min.js"></script>
+	    <script src="/js/bootstrap.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script>
 	    <script src="/js/ingame.js"></script>
-	    <script async defer
-	        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwOU9EuXESP9xGI9HLhe33MDu73PFX9lA&signed_in=true&callback=initialize">
+	    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAwOU9EuXESP9xGI9HLhe33MDu73PFX9lA&signed_in=true&callback=initialize">
 	    </script>
+	    <script src="/js/markerwithlabel.js"></script>
 	</body>
 </html>
