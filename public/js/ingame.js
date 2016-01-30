@@ -56,7 +56,7 @@ function initialize() {
 	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
 	//Currently a static start location, will be automatic in future
-  	var start_loc = {lat: 41.8978996, lng: 12.4733917};
+  	var google_start_loc = new google.maps.LatLng(56.0454131, 12.6935801);
   	var bounds = {north: 41.902, south: 41.896, east: 12.480,west: 12.469};
 
   	var rectangle = new google.maps.Rectangle({
@@ -69,17 +69,18 @@ function initialize() {
 
 
   	//Let the server know we are ready
-  	socket.emit('joined_game', { lobby_id : lobby_id, username : username, loc : start_loc});
+  	socket.emit('joined_game', { lobby_id : lobby_id, username : username, loc : google_start_loc});
 
   	//Setup the minimap
-  	map = new google.maps.Map(document.getElementById('mini_map_container'), {
-    	center: start_loc,
-      	streetViewControl: false,
-    	zoom: 15
+  	map = new google.maps.Map(
+  		document.getElementById("mini_map_container"), {
+    		center: google_start_loc,
+      		streetViewControl: false,
+    		zoom: 14
   	});
 
   	var my_marker = new google.maps.Marker({
-		position: start_loc,
+		position: google_start_loc,
 		map: map,
 	    icon: {
 	      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
@@ -93,8 +94,8 @@ function initialize() {
 
   	//Setup the streetview
   	panorama = new google.maps.StreetViewPanorama(
-      	document.getElementById('street_view_container'), {
-        	position: start_loc,
+      	document.getElementById("street_view_container"), {
+        	position: google_start_loc,
         	pov: {
           		heading: 34,
           		pitch: 0
@@ -117,11 +118,10 @@ function initialize() {
   	
   	//Let people know when we have changed location
 	panorama.addListener('position_changed', function() {
-		var lat = panorama.getPosition().lat();
-		var lng = panorama.getPosition().lng();
-		map.setCenter({lat: lat, lng: lng});
-		my_marker.setPosition({lat: lat, lng: lng});
-  		socket.emit('update_my_position', { username : username, lat : lat, lng : lng, lobby_id : lobby_id});
+		var current_loc = panorama.getPosition();
+		map.setCenter(current_loc);
+		my_marker.setPosition(current_loc);
+  		socket.emit('update_my_position', { username : username, loc : current_loc, lobby_id : lobby_id});
 	});
 
   	//Bind this panorama to the minimap
@@ -148,11 +148,10 @@ function initialize() {
 	socket.on('player_has_joined', function(result){
 		var players_name = result.username;
 		var socket_id = result.socket_id;
-  		var lat_lng = {lat: result.lat, lng: result.lng};
+  		var lat_lng = result.loc;
 		if(!markers[socket_id]) {
 			markers[socket_id] = {};
-			markers[socket_id]['panorama'] = new MarkerWithLabel({
-				animation: google.maps.Animation.DROP,
+			markers[socket_id]['panorama'] = new google.maps.Marker({
 		      	position: lat_lng,
 		      	map: panorama,
 			    icon: {
@@ -163,17 +162,9 @@ function initialize() {
 				    fillColor: "rgba(25, 25, 25, 0.73)",
 				    fillOpacity:1
 			    },
-		      	title: socket_id,
-       			labelContent: players_name,
-       			labelAnchor: new google.maps.Point(25, -5),
-		       	labelClass: "labels", // the CSS class for the label
-		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
+		      	title: socket_id
 		  	});
-			markers[socket_id]['map'] = new MarkerWithLabel({
-				animation: google.maps.Animation.DROP,
-				text: 'test',
-				fontSize: 20,
-				align: 'center',
+			markers[socket_id]['map'] = new google.maps.Marker({
 		      	position: lat_lng,
 		      	map: map,
 			    icon: {
@@ -184,11 +175,7 @@ function initialize() {
 				    fillColor: "rgba(25, 25, 25, 0.73)",
 				    fillOpacity:1
 			    },
-		      	title: socket_id,
-       			labelContent: players_name,
-       			labelAnchor: new google.maps.Point(25, 38),
-		       	labelClass: "labels", // the CSS class for the label
-		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
+		      	title: socket_id
 		  	});
 		}
 	});
@@ -222,14 +209,14 @@ function initialize() {
   	});
 
 	function update_player(result){
+		console.log(markers);
 		var socket_id = result.socket_id;
 		var players_name = result.username;
-  		var lat_lng = {lat: result.lat, lng: result.lng};
+  		var lat_lng = result.loc;
 		//If no marker yet, set one up
 		if(!markers[socket_id]) {
 			markers[socket_id] = {};
-			markers[socket_id]['panorama'] = new MarkerWithLabel({
-				animation: google.maps.Animation.DROP,
+			markers[socket_id]['panorama'] = new google.maps.Marker({
 		      	position: lat_lng,
 		      	map: panorama,
 			    icon: {
@@ -240,17 +227,9 @@ function initialize() {
 				    fillColor: "rgba(25, 25, 25, 0.73)",
 				    fillOpacity:1
 			    },
-		      	title: socket_id,
-       			labelContent: players_name,
-       			labelAnchor: new google.maps.Point(25, -5),
-		       	labelClass: "labels", // the CSS class for the label
-		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
+		      	title: socket_id
 		  	});
-			markers[socket_id]['map'] = new MarkerWithLabel({
-				animation: google.maps.Animation.DROP,
-				text: 'test',
-				fontSize: 20,
-				align: 'center',
+			markers[socket_id]['map'] = new google.maps.Marker({
 		      	position: lat_lng,
 		      	map: map,
 			    icon: {
@@ -261,16 +240,12 @@ function initialize() {
 				    fillColor: "rgba(25, 25, 25, 0.73)",
 				    fillOpacity:1
 			    },
-		      	title: socket_id,
-       			labelContent: players_name,
-       			labelAnchor: new google.maps.Point(25, 38),
-		       	labelClass: "labels", // the CSS class for the label
-		       	labelStyle: {"color" : "white", "background-color" : "rgba(25, 25, 25, 0.4)", "width" : "50px", "text-align" : "center"}
+		      	title: socket_id
 		  	});
 		} else { //else update the current markers we have
-			console.log(lat_lng);
 			markers[socket_id]['panorama'].setPosition(lat_lng);
 			markers[socket_id]['map'].setPosition(lat_lng);
 		}
 	}
 }
+google.maps.event.addDomListener(window, "load", initialize);

@@ -46,8 +46,7 @@ function player(socket_id, username){
     this.socket_id = socket_id;
     this.username = username;
     this.in_game = 0;
-    this.lat = 0;
-    this.lng = 0;
+    this.loc = null;
 }
 
 var find_private = 0, find_public = 1, inlobby = 2, ingame = 3;
@@ -226,8 +225,6 @@ io.on('connection', function(socket){
             if(username == e.username){
                 found = true;
                 Public_Lobbies[obj.lobby_id].players[index].socket_id = socket.id;
-                Public_Lobbies[obj.lobby_id].players[index].lat = location.lat;
-                Public_Lobbies[obj.lobby_id].players[index].lng = location.lng;
                 Public_Lobbies[obj.lobby_id].players[index].loc = location;
                 Public_Lobbies[obj.lobby_id].players[index].in_game = 1;
             }else{
@@ -240,8 +237,6 @@ io.on('connection', function(socket){
             Public_Lobbies[obj.lobby_id].players.push({});
             Public_Lobbies[obj.lobby_id].players[players_length].username = obj.username;
             Public_Lobbies[obj.lobby_id].players[players_length].socket_id = socket.id;
-            Public_Lobbies[obj.lobby_id].players[players_length].lat = location.lat;
-            Public_Lobbies[obj.lobby_id].players[players_length].lng = location.lng;
             Public_Lobbies[obj.lobby_id].players[players_length].loc = location;
             Public_Lobbies[obj.lobby_id].players[players_length].in_game = 1;
         }
@@ -251,10 +246,9 @@ io.on('connection', function(socket){
     socket.on('update_my_position', function(obj){
         Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
             if(e.socket_id == socket.id){
-                Public_Lobbies[obj.lobby_id].players[index].lat = obj.lat;
-                Public_Lobbies[obj.lobby_id].players[index].lng = obj.lng;
+                Public_Lobbies[obj.lobby_id].players[index].loc = obj.loc;
             }else{
-                io.to(e.socket_id).emit('update_player', { username : obj.username, lat : obj.lat,  lng : obj.lng, socket_id : socket.id} );
+                io.to(e.socket_id).emit('update_player', { username : obj.username, loc : obj.loc, socket_id : socket.id} );
             }
         });
     });
