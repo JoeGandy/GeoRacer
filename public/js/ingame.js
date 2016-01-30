@@ -57,6 +57,9 @@ function initialize() {
 
 	//Currently a static start location, will be automatic in future
   	var google_start_loc = new google.maps.LatLng(56.0454131, 12.6935801);
+
+  	var my_colour = { fill : "rgba(50,0,0,0.3)", stroke : "rgba(50,0,0,0.5)", name : "grey"};
+
   	var bounds = {north: 41.902, south: 41.896, east: 12.480,west: 12.469};
 
   	var rectangle = new google.maps.Rectangle({
@@ -86,8 +89,8 @@ function initialize() {
 	      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 	      	scale: 4,
 	      	rotation: 34+180,
-	      	strokeColor: "rgba(63, 191, 63, 0.73)",
-		    fillColor: "rgba(63, 191, 63, 0.73)",
+		    strokeColor: my_colour.stroke,
+		    fillColor: my_colour.fill,
 		    fillOpacity:1
 	    }
 	});
@@ -109,8 +112,8 @@ function initialize() {
 		    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 		    scale: 4,
 		    rotation: panorama.pov.heading+180,
-		    strokeColor: "rgba(63, 191, 63, 0.73)",
-		    fillColor: "rgba(63, 191, 63, 0.73)",
+		    strokeColor: my_colour.stroke,
+		    fillColor: my_colour.fill,
 		    fillOpacity:100
 		});
 	});
@@ -127,6 +130,18 @@ function initialize() {
   	//Bind this panorama to the minimap
   	map.setStreetView(panorama);
   	rectangle.setMap(map);
+
+  	socket.on('set_my_colour', function(result){
+  		my_colour = result;
+  		my_marker.setIcon({
+		    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+		    scale: 4,
+		    rotation: panorama.pov.heading+180,
+		    strokeColor: my_colour.stroke,
+		    fillColor: my_colour.fill,
+		    fillOpacity:100
+		});
+  	});
 
 	socket.on('update_player', function(result){
 		update_player(result);
@@ -147,6 +162,8 @@ function initialize() {
 
 	socket.on('player_has_joined', function(result){
 		var players_name = result.username;
+		var colour = result.colour;
+		console.log(colour);
 		var socket_id = result.socket_id;
   		var lat_lng = result.loc;
 		if(!markers[socket_id]) {
@@ -158,8 +175,8 @@ function initialize() {
 			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 			      	scale: 13,
 			      	rotation: 0,
-			      	strokeColor: "rgba(25, 25, 25, 0.73)",
-				    fillColor: "rgba(25, 25, 25, 0.73)",
+			      	strokeColor: colour.stroke,
+				    fillColor:  colour.fill,
 				    fillOpacity:1
 			    },
 		      	title: socket_id
@@ -171,8 +188,8 @@ function initialize() {
 			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 			      	scale: 4,
 			      	rotation: 0,
-			      	strokeColor: "rgba(25, 25, 25, 0.73)",
-				    fillColor: "rgba(25, 25, 25, 0.73)",
+			      	strokeColor: colour.stroke,
+				    fillColor:  colour.fill,
 				    fillOpacity:1
 			    },
 		      	title: socket_id
@@ -209,8 +226,8 @@ function initialize() {
   	});
 
 	function update_player(result){
-		console.log(markers);
 		var socket_id = result.socket_id;
+		var colour = result.colour;
 		var players_name = result.username;
   		var lat_lng = result.loc;
 		//If no marker yet, set one up
@@ -223,8 +240,8 @@ function initialize() {
 			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 			      	scale: 13,
 			      	rotation: 0,
-			      	strokeColor: "rgba(25, 25, 25, 0.73)",
-				    fillColor: "rgba(25, 25, 25, 0.73)",
+			      	strokeColor: colour.stroke,
+				    fillColor: colour.fill,
 				    fillOpacity:1
 			    },
 		      	title: socket_id
@@ -236,8 +253,8 @@ function initialize() {
 			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 			      	scale: 4,
 			      	rotation: 0,
-			      	strokeColor: "rgba(25, 25, 25, 0.73)",
-				    fillColor: "rgba(25, 25, 25, 0.73)",
+			      	strokeColor: colour.stroke,
+				    fillColor: colour.fill,
 				    fillOpacity:1
 			    },
 		      	title: socket_id

@@ -47,6 +47,7 @@ function player(socket_id, username){
     this.username = username;
     this.in_game = 0;
     this.loc = null;
+    this.colour = {};
 }
 
 var find_private = 0, find_public = 1, inlobby = 2, ingame = 3;
@@ -85,6 +86,17 @@ app.get('/about', function(req, res){
 });
 
 
+/*Colours*/
+
+var colours = [
+    { fill : "rgba(150,0,0,0.5)", stroke : "rgba(150,0,0,0.7)", name : "red"},
+    { fill : "rgba(0,150,0,0.5)", stroke : "rgba(0,150,0,0.7)", name : "green"},
+    { fill : "rgba(0,0,150,0.5)", stroke : "rgba(0,0,150,0.7)", name : "blue"},
+    { fill : "rgba(150,150,0,0.5)", stroke : "rgba(150,150,0,0.7)", name : "yellow"},
+    { fill : "rgba(150,0,150,0.5)", stroke : "rgba(150,0,150,0.7)", name : "pink"}
+];
+
+var colour_distribution = 0;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -217,7 +229,9 @@ io.on('connection', function(socket){
     });
 
     socket.on('joined_game', function(obj){
+        colour_distribution = colour_distribution < colours.length ? colour_distribution+1 : 0;
         obj.socket_id = socket.id;
+        obj.colour = colours[colour_distribution];
         var username = obj.username;
         var found = false;
         var location = obj.loc;
@@ -239,6 +253,9 @@ io.on('connection', function(socket){
             Public_Lobbies[obj.lobby_id].players[players_length].socket_id = socket.id;
             Public_Lobbies[obj.lobby_id].players[players_length].loc = location;
             Public_Lobbies[obj.lobby_id].players[players_length].in_game = 1;
+            Public_Lobbies[obj.lobby_id].players[players_length].colour = colours[colour_distribution];
+            io.to(socket.id).emit('set_my_colour',  colours[colour_distribution]);
+
         }
 
     });
