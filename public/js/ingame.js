@@ -32,6 +32,8 @@ var marker_array = new Array();
 
 var markers = {};
 
+var player_count = 0;
+
 var new_message_count = 0;
 
 /*
@@ -131,8 +133,8 @@ function initialize() {
   	map.setStreetView(panorama);
   	rectangle.setMap(map);
 
-  	socket.on('set_my_colour', function(result){
-  		my_colour = result;
+  	socket.on('get_starting_data', function(result){
+  		my_colour = result.colour;
   		my_marker.setIcon({
 		    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 		    scale: 4,
@@ -141,6 +143,8 @@ function initialize() {
 		    fillColor: my_colour.fill,
 		    fillOpacity:100
 		});
+		player_count = result.lobby.players.length;
+		$("#player_count").text(player_count);
   	});
 
 	socket.on('update_player', function(result){
@@ -148,6 +152,8 @@ function initialize() {
 	});
 
 	socket.on('player_left', function(result){
+		$("#player_count").text(--player_count);
+
 		markers[result.socket_id]['panorama'].setMap(null);
 		markers[result.socket_id]['map'].setMap(null);
 
@@ -161,6 +167,8 @@ function initialize() {
 	});
 
 	socket.on('player_has_joined', function(result){
+		$("#player_count").text(++player_count);
+
 		var players_name = result.username;
 		var colour = result.colour;
 		console.log(colour);

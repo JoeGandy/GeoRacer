@@ -117,7 +117,7 @@ io.on('connection', function(socket){
             //Before we find a lobby we need to verify all users are here with a ping request of some kind
 
             //Ensure that there is space for this person in a lobby
-            console.log("Finding space in a open lobby");
+            console.log("FIND GAME: Finding space in a open lobby");
             var lobby_id = -1;
             for(var x = (Public_Lobbies.length - 1); x >= 0; x--){
                 if(Public_Lobbies[x].players.length < settings.max_players){
@@ -126,12 +126,12 @@ io.on('connection', function(socket){
             }
 
             if(lobby_id == -1){
-                console.log("Could not find a free lobby, please try again later");
+                console.log("FIND GAME: Could not find a free lobby, please try again later");
                 break;
             }
 
             
-            console.log("If there is space, add the user to that lobby");
+            console.log("FINDGAME: Adding user to the free lobby");
             
             Public_Lobbies[lobby_id].open = 0;
 
@@ -144,6 +144,7 @@ io.on('connection', function(socket){
             var username = socket.handshake.query.username;
             var lobby_id = socket.handshake.query.lobby_id;
 
+            console.log("IN LOBBY: Now " + username + " has joined, let everyone know");
             //Emit to other players that someone has joined
             Public_Lobbies[lobby_id].players.forEach(function(player, index){
                 //tell this player of other users that are present
@@ -153,6 +154,7 @@ io.on('connection', function(socket){
                 io.to(player.socket_id).emit('lobby_message_s', { username : username, input : " >> has joined the lobby << "});
             });
 
+            console.log("IN LOBBY: Creating the player in storage");
             Public_Lobbies[lobby_id].players.push(new player(socket.id, username));
             
             Players[inlobby].push(socket.id);
@@ -229,7 +231,7 @@ io.on('connection', function(socket){
     });
 
     socket.on('joined_game', function(obj){
-        colour_distribution = colour_distribution < colours.length ? colour_distribution+1 : 0;
+        colour_distribution = colour_distribution < colours.length-1 ? colour_distribution+1 : 0;
         obj.socket_id = socket.id;
         obj.colour = colours[colour_distribution];
         var username = obj.username;
@@ -254,7 +256,8 @@ io.on('connection', function(socket){
             Public_Lobbies[obj.lobby_id].players[players_length].loc = location;
             Public_Lobbies[obj.lobby_id].players[players_length].in_game = 1;
             Public_Lobbies[obj.lobby_id].players[players_length].colour = colours[colour_distribution];
-            io.to(socket.id).emit('set_my_colour',  colours[colour_distribution]);
+            //Send important info to the client
+            io.to(socket.id).emit('get_starting_data',  { colour : colours[colour_distribution], lobby : Public_Lobbies[obj.lobby_id] });
 
         }
 
