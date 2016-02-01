@@ -54,6 +54,26 @@ var new_message_count = 0;
 
 */
 
+var minimap_styles = [
+  {
+    featureType: "all",
+    elementType: "labels",
+    stylers: [
+      { visibility: "off" }
+    ]
+  }
+];
+
+var panorama_styles = [
+  {
+    featureType: "all",
+    elementType: "labels",
+    stylers: [
+      { visibility: "off" }
+    ]
+  }
+];
+
 function initialize() {
 	//Get our username from previous page
 	var username = localStorage.getItem("username");
@@ -84,9 +104,14 @@ function initialize() {
   	map = new google.maps.Map(
   		document.getElementById("mini_map_container"), {
     		center: google_start_loc,
+    		zoom: 14,
       		streetViewControl: false,
-    		zoom: 14
+			zoomControl: false,
+			mapTypeControl: false,
+			scaleControl: false,
+			rotateControl: false
   	});
+	map.setOptions({styles: minimap_styles});
 
   	var my_marker = new google.maps.Marker({
 		position: google_start_loc,
@@ -108,8 +133,15 @@ function initialize() {
         	pov: {
           		heading: start_angle,
           		pitch: 0
-        	}
+        	},
+        	zoomControl: false,
+      		streetViewControl: false,
+			mapTypeControl: false,
+			scaleControl: false,
+			rotateControl: false
     });
+
+	panorama.setOptions({styles: panorama_styles});
 
 
 

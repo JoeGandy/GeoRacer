@@ -31,10 +31,16 @@
 	width:100%;
 	left:0;right:0;
 	margin: 0 auto;
-	padding-top:10px;
 	text-align:center;
 	text-shadow:0 0 5px #444;
 	color:white;
+	background-color:rgba(0,0,0,0.7);
+	border:2px solid rgba(0,0,0,0.45);
+}
+
+.game_window .objective h3{
+	margin-top:10px;
+	font-size:1.1em;
 }
 .game_window .objective * {
 	font-family: 'Hammersmith One', sans-serif;
@@ -60,9 +66,9 @@
 .game_window .information table{
 	font-family: 'Hammersmith One', sans-serif;
 	color:white;
-	width:50%;
+	width:100%;
 	min-width:135px;
-	margin:0 auto;
+	margin:0;
 	padding:0;
 }
 .game_window .information td, .game_window .information th{
@@ -146,13 +152,13 @@
 
 @media (min-width: 769px) and (max-width: 992px) {
 	.game_window .minimap {
-		width:50%;
+		width:100%;
 	}
 	#toggle_minmap{
 		position: absolute;
 		right:0;
 		top:0;
-		width:50%;
+		width:100%;
 		z-index:102;
 	}
 }
@@ -176,4 +182,15 @@
 		background-color:#444;
 		height:90px;
 	}
+
+	.objective_box > .objective{
+		background-color:rgba(0,0,0,0);
+		border:none;
+		margin-top:0px;
+		padding-top:10px;
+	}
+}
+
+.gm-style > div:nth-child(10){
+ display:none;
 }
