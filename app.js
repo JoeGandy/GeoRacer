@@ -40,6 +40,7 @@ function lobby(type){
     this.open = 1;      //1 == open, 0 == not open
     this.state = 1;     //0 == ingame, 1 == lobby
     this.players = [];  //Players/sockets in the lobby
+    this.objectives = 10;
 }
 
 function player(socket_id, username){
@@ -48,6 +49,7 @@ function player(socket_id, username){
     this.in_game = 0;
     this.loc = null;
     this.colour = {};
+    this.current_objective = 1;
 }
 
 var find_private = 0, find_public = 1, inlobby = 2, ingame = 3;
@@ -234,6 +236,7 @@ io.on('connection', function(socket){
         colour_distribution = colour_distribution < colours.length-1 ? colour_distribution+1 : 0;
         obj.socket_id = socket.id;
         obj.colour = colours[colour_distribution];
+        obj.current_objective = 1;
         var username = obj.username;
         var found = false;
         var location = obj.loc;
@@ -255,7 +258,9 @@ io.on('connection', function(socket){
             Public_Lobbies[obj.lobby_id].players[players_length].socket_id = socket.id;
             Public_Lobbies[obj.lobby_id].players[players_length].loc = location;
             Public_Lobbies[obj.lobby_id].players[players_length].in_game = 1;
+            Public_Lobbies[obj.lobby_id].players[players_length].current_objective = 1;
             Public_Lobbies[obj.lobby_id].players[players_length].colour = colours[colour_distribution];
+            Public_Lobbies[obj.lobby_id].players[players_length].current_objective = 0;
             //Send important info to the client
             io.to(socket.id).emit('get_starting_data',  { colour : colours[colour_distribution], lobby : Public_Lobbies[obj.lobby_id] });
 

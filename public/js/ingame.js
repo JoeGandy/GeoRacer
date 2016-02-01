@@ -76,6 +76,7 @@ function initialize() {
   	//Let the server know we are ready
   	socket.emit('joined_game', { lobby_id : lobby_id, username : username, loc : google_start_loc});
 
+
   	//Setup the minimap
   	map = new google.maps.Map(
   		document.getElementById("mini_map_container"), {
@@ -145,6 +146,19 @@ function initialize() {
 		});
 		player_count = result.lobby.players.length;
 		$("#player_count").text(player_count);
+
+		$.each(result.lobby.players, function( index, value ) {
+			var html = "<tr id=\"row_" + value.socket_id + "\">" +
+			    		"<td><span style=\"color:" + value.colour.fill +";\">&#9660;</span>"+ value.username + "</td>" +
+			    		"<td>" + value.current_objective + "</td>" +
+			       	"</tr>";
+			$("#players_current_objectives").html($("#players_current_objectives").html() + html);
+
+			if(value.socket_id == socket.id){
+				$("#current_objective_count").text(value.current_objective);
+				$("#total_objective_count").text(result.lobby.objectives);
+			}
+		});
   	});
 
 	socket.on('update_player', function(result){
@@ -153,6 +167,8 @@ function initialize() {
 
 	socket.on('player_left', function(result){
 		$("#player_count").text(--player_count);
+
+		$("#players_current_objectives #row_" + result.socket_id).remove();
 
 		markers[result.socket_id]['panorama'].setMap(null);
 		markers[result.socket_id]['map'].setMap(null);
@@ -167,12 +183,20 @@ function initialize() {
 	});
 
 	socket.on('player_has_joined', function(result){
-		$("#player_count").text(++player_count);
-
 		var players_name = result.username;
 		var colour = result.colour;
-		console.log(colour);
 		var socket_id = result.socket_id;
+		var current_objective = result.current_objective;
+
+		$("#player_count").text(++player_count);
+
+		var html = "<tr id=\"row_" + socket_id + "\" >" +
+			    		"<td><span style=\"color:" + colour.fill +";\">&#9660;</span>"+ players_name + "</td>" +
+			    		"<td>"+ current_objective + "</td>" +
+			       	"</tr>";
+
+		$("#players_current_objectives").html($("#players_current_objectives").html() + html);
+
   		var lat_lng = result.loc;
 		if(!markers[socket_id]) {
 			markers[socket_id] = {};
