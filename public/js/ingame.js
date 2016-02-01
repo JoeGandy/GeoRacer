@@ -34,6 +34,9 @@ var markers = {};
 
 var player_count = 0;
 
+var start_angle = 34; //manually entered ATM
+var last_angle = start_angle;
+
 var new_message_count = 0;
 
 /*
@@ -91,7 +94,7 @@ function initialize() {
 	    icon: {
 	      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 	      	scale: 4,
-	      	rotation: 34+180,
+	      	rotation: start_angle+180,
 		    strokeColor: my_colour.stroke,
 		    fillColor: my_colour.fill,
 		    fillOpacity:1
@@ -103,7 +106,7 @@ function initialize() {
       	document.getElementById("street_view_container"), {
         	position: google_start_loc,
         	pov: {
-          		heading: 34,
+          		heading: start_angle,
           		pitch: 0
         	}
     });
@@ -119,6 +122,11 @@ function initialize() {
 		    fillColor: my_colour.fill,
 		    fillOpacity:100
 		});
+
+		if(panorama.pov.heading >= last_angle+30 || panorama.pov.heading <= last_angle-30){
+			last_angle = panorama.pov.heading;
+			socket.emit('update_my_angle', { username : username, angle : panorama.pov.heading, lobby_id : lobby_id, colour : my_colour});
+		}
 	});
 
   	
@@ -127,7 +135,7 @@ function initialize() {
 		var current_loc = panorama.getPosition();
 		map.setCenter(current_loc);
 		my_marker.setPosition(current_loc);
-  		socket.emit('update_my_position', { username : username, loc : current_loc, lobby_id : lobby_id});
+  		socket.emit('update_my_position', { username : username, loc : current_loc, lobby_id : lobby_id, colour : my_colour});
 	});
 
   	//Bind this panorama to the minimap
@@ -256,6 +264,22 @@ function initialize() {
     	
     	socket.emit('ingame_message_c', { input : input, username : username, lobby_id : lobby_id});
   	});
+
+	socket.on('update_player_angle', function(result){
+		var socket_id = result.socket_id;
+		var colour = result.colour;
+  		var angle = result.angle;
+		//If no marker yet, set one up
+		markers[socket_id]['map'].setIcon({
+			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+			      	scale: 4,
+			      	rotation: angle+180,
+			      	strokeColor: colour.stroke,
+				    fillColor: colour.fill,
+				    fillOpacity:1
+		});
+		
+	});
 
 	function update_player(result){
 		var socket_id = result.socket_id;

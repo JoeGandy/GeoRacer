@@ -268,6 +268,14 @@ io.on('connection', function(socket){
 
     });
 
+    socket.on('update_my_angle', function(obj){
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            if(e.socket_id != socket.id){
+                io.to(e.socket_id).emit('update_player_angle', { username : obj.username, angle : obj.angle, socket_id : socket.id, colour : obj.colour} );
+            }
+        });
+    });
+
     socket.on('update_my_position', function(obj){
         Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
             if(e.socket_id == socket.id){
