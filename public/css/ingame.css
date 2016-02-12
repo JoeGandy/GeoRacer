@@ -194,3 +194,18 @@
 .gm-style > div:nth-child(10){
  display:none;
 }
+
+#back_to_start{
+	position:absolute;
+	width:350px;
+	height:100px;
+	left:0;
+	right:0;
+	bottom:0;
+	margin:auto;
+	color:white;
+	background-color:rgba(0,0,0,0.7);
+	border:2px solid rgba(0,0,0,0.45);
+	padding:5px;
+	text-align: center;
+}

@@ -81,7 +81,7 @@ function initialize() {
 	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
 	//Currently a static start location, will be automatic in future
-  	var google_start_loc = new google.maps.LatLng(56.0454131, 12.6935801);
+  	var google_start_loc = new google.maps.LatLng(41.8983482,12.4733507);
 
   	var my_colour = { fill : "rgba(50,0,0,0.3)", stroke : "rgba(50,0,0,0.5)", name : "grey"};
 
@@ -94,6 +94,7 @@ function initialize() {
 	    strokeWeight: 2,
 	    clickable: false
 	});
+
 
 
   	//Let the server know we are ready
@@ -164,10 +165,17 @@ function initialize() {
   	
   	//Let people know when we have changed location
 	panorama.addListener('position_changed', function() {
+		//var bounds = {north: 41.902, south: 41.896, east: 12.480,west: 12.469};
 		var current_loc = panorama.getPosition();
 		map.setCenter(current_loc);
 		my_marker.setPosition(current_loc);
   		socket.emit('update_my_position', { username : username, loc : current_loc, lobby_id : lobby_id, colour : my_colour});
+
+  		if(current_loc.lat() > bounds.north || current_loc.lat() < bounds.south || current_loc.lng() > bounds.east || current_loc.lng() < bounds.west){
+  			$("#back_to_start").show();
+  		}else{
+  			$("#back_to_start").hide();
+  		}
 	});
 
   	//Bind this panorama to the minimap
@@ -352,5 +360,12 @@ function initialize() {
 			markers[socket_id]['map'].setPosition(lat_lng);
 		}
 	}
+
+	$("#back_to_start_button").click(function(){
+		panorama.setPosition(google_start_loc);
+		map.setCenter(google_start_loc);
+		my_marker.setPosition(google_start_loc);
+  		socket.emit('update_my_position', { username : username, loc : google_start_loc, lobby_id : lobby_id, colour : my_colour});
+	});
 }
 google.maps.event.addDomListener(window, "load", initialize);
