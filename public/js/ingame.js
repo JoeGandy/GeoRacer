@@ -110,7 +110,8 @@ function initialize() {
 			zoomControl: false,
 			mapTypeControl: false,
 			scaleControl: false,
-			rotateControl: false
+			rotateControl: false,
+			liteMode: true
   	});
 	map.setOptions({styles: minimap_styles});
 
@@ -123,7 +124,8 @@ function initialize() {
 	      	rotation: start_angle+180,
 		    strokeColor: my_colour.stroke,
 		    fillColor: my_colour.fill,
-		    fillOpacity:1
+		    fillOpacity:1,
+			liteMode: true
 	    }
 	});
 
