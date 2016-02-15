@@ -77,15 +77,22 @@ var panorama_styles = [
 function initialize() {
 	//Get our username from previous page
 	var username = localStorage.getItem("username");
+	var area_height = 0.005;
+	var area_width = 0.008;
 	//Set up socket connection, stating where we are from and our username
 	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
 	//Currently a static start location, will be automatic in future
-  	var google_start_loc = new google.maps.LatLng(41.8983482,12.4733507);
+  	var google_start_loc = new google.maps.LatLng(52.9529907,-1.1864428);
 
   	var my_colour = { fill : "rgba(50,0,0,0.3)", stroke : "rgba(50,0,0,0.5)", name : "grey"};
 
-  	var bounds = {north: 41.902, south: 41.896, east: 12.480,west: 12.469};
+  	var bounds = {
+  		north: google_start_loc.lat() + area_height,
+  		south: google_start_loc.lat() - area_height,
+  		east: google_start_loc.lng() + area_width,
+  		west: google_start_loc.lng() - area_width
+  	};
 
   	var rectangle = new google.maps.Rectangle({
 	    bounds: bounds,
@@ -114,6 +121,13 @@ function initialize() {
 			liteMode: true
   	});
 	map.setOptions({styles: minimap_styles});
+
+	var request = {
+	    location: google_start_loc,
+	    radius: measure(google_start_loc.lat(),google_start_loc.lng(), google_start_loc.lat() + area_height, google_start_loc.lng())
+	};
+	service = new google.maps.places.PlacesService(map);
+	service.nearbySearch(request, places_callback);
 
   	var my_marker = new google.maps.Marker({
 		position: google_start_loc,
@@ -371,3 +385,28 @@ function initialize() {
 	});
 }
 google.maps.event.addDomListener(window, "load", initialize);
+
+
+//http://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
+function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement function
+    var R = 6378.137; // Radius of earth in KM
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    var d = R * c;
+    return d * 1000; // meters
+}
+
+function places_callback(results, status) {
+	console.log(results);
+	for(var x = 0; x < results.length; x++){
+	  	new google.maps.Marker({
+			position: results[x].geometry.location,
+			map: map,
+			title: results[x].name
+		});
+	}
+}
