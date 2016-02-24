@@ -9,6 +9,16 @@
 	z-index:100;
 
 }
+
+/* A quick fix to stop arrows hiding when we move panorama */
+#street_view_container > div.gm-style > div:nth-child(1) > div > div.gmnoprint{
+	z-index:150 !important;
+}
+
+#street_view_container > div.gm-style > div:nth-child(1) > div > div.gmnoprint > svg > text{
+	display:none !important;
+}
+
 .game_window .minimap {
 	width:75%;
 	float:right;
@@ -61,6 +71,7 @@
 	border:2px solid rgba(0,0,0,0.8);
 	border-top:none;
 	padding:15px 0;
+	position:relative;
 }
 
 .game_window .information table{
@@ -208,4 +219,67 @@
 	border:2px solid rgba(0,0,0,0.45);
 	padding:5px;
 	text-align: center;
+}
+
+#found_objective{
+	position:absolute;
+	width:350px;
+	height:70px;
+	left:0;
+	right:0;
+	bottom:0;
+	top:0;
+	margin:auto;
+	color:white;
+	background-color:rgba(0,0,0,0.7);
+	border:2px solid rgba(0,0,0,0.45);
+	padding:5px;
+	text-align: center;
+	font-weight:bold;
+}
+
+#closeometer{
+	display:inline-block;
+	line-height:20px;
+	width:70%;
+	padding:5px 10px;
+}
+
+#closeometer input{
+	display:inline-block;
+	width:100%;
+	display:inline;
+	-webkit-appearance: none;
+  	background: #333; /* For browsers that do not support gradients */
+  	background: -webkit-linear-gradient(left, blue , red); /* For Safari 5.1 to 6.0 */
+  	background: -o-linear-gradient(right, blue, red); /* For Opera 11.1 to 12.0 */
+ 	background: -moz-linear-gradient(right, blue, red); /* For Firefox 3.6 to 15 */
+  	background: linear-gradient(to right, blue , red); /* Standard syntax */
+  	border:2px solid #111;
+  	height:20px;
+}
+
+#closeometer input::-webkit-slider-thumb{
+	-webkit-appearance: none;
+	height: 20px;
+  	width: 10px;
+	border-left: 10px solid transparent;
+	border-right: 10px solid transparent;
+	border-top: 20px solid white;
+}
+.colseometer_labels{
+	position:absolute;
+	display:inline-block;
+	width:10%;
+	margin:0;
+
+}
+.colseometer_labels:first-of-type{
+	left:4%;
+}
+.colseometer_labels:last-of-type{
+}
+.colseometer_container{
+	position:relative;
+	width:100%;
 }

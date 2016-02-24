@@ -19,7 +19,7 @@
 	    		<div class="col-md-5 col-sm-6 remove_pad objective_box">
 			    	<div class="objective">
 			    		<h3><span>Your current objective is:</span></h3>
-			    		<h4><span>Find the nearest restaurant</span></h4>
+			    		<h4><span>Loading...</span></h4>
 			    	</div>
 			    </div>
 	    		<div class="col-md-3 col-md-offset-1 col-sm-6 col-sm-offset-0 remove_pad ">
@@ -33,7 +33,15 @@
 			    				<th> Players </th>
 			    				<th> Objective </th>
 			    			</tr>
-			    		</table>		
+			    		</table><br>
+			    		<b>The close'o'meter</b><br>
+			    		<div class="colseometer_container">
+			    		<span class="colseometer_labels">Cold </span>
+			    		<span  id="closeometer">
+			    			<input type="range" name="points" value="50" min="0" max="100" readonly="readonly">
+			    		</span>
+			    		<span class="colseometer_labels"> Hot</span>
+			    		</div>
 			    	</div>
 			    </div>
 			</div>
@@ -54,7 +62,10 @@
 	    <div id="back_to_start">
 		  	<p>You've left the search area, click below to go back to the start, or make your way back there yourself</p>
 		  	<button id="back_to_start_button" class="btn btn-sm btn-primary">Back to start</button>
-		</div><!-- /.modal -->
+		</div>
+	    <div id="found_objective" style="display:none;">
+		  	<p>You've found your objective, we'll give you a new one now!</p>
+		</div>
 	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
 	    <script src="/js/bootstrap.min.js"></script>
 		<script src="/socket.io/socket.io.js"></script>

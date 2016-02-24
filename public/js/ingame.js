@@ -37,7 +37,12 @@ var player_count = 0;
 var start_angle = 34; //manually entered ATM
 var last_angle = start_angle;
 
+var targets = [];
+var current_objective = 0;
+var total_objective_count = 0;
+
 var new_message_count = 0;
+var last_loc = 0;
 
 /*
 	Rome targets:
@@ -79,6 +84,7 @@ function initialize() {
 	var username = localStorage.getItem("username");
 	var area_height = 0.005;
 	var area_width = 0.008;
+	var size = 0;
 	//Set up socket connection, stating where we are from and our username
 	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
@@ -126,8 +132,24 @@ function initialize() {
 	    location: google_start_loc,
 	    radius: measure(google_start_loc.lat(),google_start_loc.lng(), google_start_loc.lat() + area_height, google_start_loc.lng())
 	};
+	size = measure(google_start_loc.lat() - area_height,google_start_loc.lng(), google_start_loc.lat() + area_height, google_start_loc.lng());
 	service = new google.maps.places.PlacesService(map);
-	service.nearbySearch(request, places_callback);
+	service.nearbySearch(request, function(results, status) {
+		for(var x = 0; x < results.length; x++){
+			if(inside_bounds(results[x].geometry.location, bounds)){
+				targets.push({lat_long : results[x].geometry.location, name : results[x].name});
+			  	new google.maps.Marker({
+					position: results[x].geometry.location,
+					map: map,
+					title: results[x].name
+				});
+			}
+		}
+		targets = shuffle(targets); //Randomise the order of the array so people have random objectives
+		$(".objective_box > div > h4 > span").text(targets[current_objective].name);
+	});
+
+	
 
   	var my_marker = new google.maps.Marker({
 		position: google_start_loc,
@@ -151,8 +173,6 @@ function initialize() {
           		heading: start_angle,
           		pitch: 0
         	},
-        	zoomControl: false,
-      		streetViewControl: false,
 			mapTypeControl: false,
 			scaleControl: false,
 			rotateControl: false
@@ -163,6 +183,7 @@ function initialize() {
 
 
 	panorama.addListener('pov_changed', function() {
+		var current_loc = panorama.getPosition();
 		my_marker.setIcon({
 		    path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 		    scale: 4,
@@ -176,6 +197,24 @@ function initialize() {
 			last_angle = panorama.pov.heading;
 			socket.emit('update_my_angle', { username : username, angle : panorama.pov.heading, lobby_id : lobby_id, colour : my_colour});
 		}
+		var correct_heading = angleFromCoordinate(current_loc.lat(), current_loc.lng(), targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng());
+		if((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100 && Math.abs(correct_heading-panorama.pov.heading) < 50) ||
+			(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 70 && Math.abs(correct_heading-panorama.pov.heading) < 90)){
+				//user has found their objective!
+				if(current_objective < total_objective_count){
+					current_objective++;
+					$("#found_objective").show().delay(5000).fadeOut(3000);
+					$(".objective_box > div > h4 > span").text(targets[current_objective].name);
+					$("#current_objective_count").text(current_objective);
+			  		var percentage = 100 - ((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng())) / size*100);
+			  		percentage = percentage < 0 ? 0 : percentage;
+			  		percentage = percentage > 100 ? 100 : percentage;
+			  		$("#closeometer input").val(percentage);
+				}else{
+					$("#found_objective").text("You have won! well done!");
+					$(".objective_box").hide();
+			}
+		}
 	});
 
   	
@@ -187,11 +226,15 @@ function initialize() {
 		my_marker.setPosition(current_loc);
   		socket.emit('update_my_position', { username : username, loc : current_loc, lobby_id : lobby_id, colour : my_colour});
 
-  		if(current_loc.lat() > bounds.north || current_loc.lat() < bounds.south || current_loc.lng() > bounds.east || current_loc.lng() < bounds.west){
+  		if(!inside_bounds(current_loc, bounds)){
   			$("#back_to_start").show();
   		}else{
   			$("#back_to_start").hide();
   		}
+  		var percentage = 100 - ((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng())) / size*100);
+  		percentage = percentage < 0 ? 0 : percentage;
+  		percentage = percentage > 100 ? 100 : percentage;
+  		$("#closeometer input").val(percentage);
 	});
 
   	//Bind this panorama to the minimap
@@ -221,6 +264,7 @@ function initialize() {
 			if(value.socket_id == socket.id){
 				$("#current_objective_count").text(value.current_objective);
 				$("#total_objective_count").text(result.lobby.objectives);
+				total_objective_count = result.lobby.objectives;
 			}
 		});
   	});
@@ -400,13 +444,44 @@ function measure(lat1, lon1, lat2, lon2){  // generally used geo measurement fun
     return d * 1000; // meters
 }
 
-function places_callback(results, status) {
-	console.log(results);
-	for(var x = 0; x < results.length; x++){
-	  	new google.maps.Marker({
-			position: results[x].geometry.location,
-			map: map,
-			title: results[x].name
-		});
-	}
+function inside_bounds(lat_long, bounds){
+  	if(lat_long.lat() > bounds.north || lat_long.lat() < bounds.south || lat_long.lng() > bounds.east || lat_long.lng() < bounds.west)
+		return false;
+	else
+		return true;
+}
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+function angleFromCoordinate(lat1, long1, lat2, long2) {
+
+    var dLon = (long2 - long1);
+
+    var y = Math.sin(dLon) * Math.cos(lat2);
+    var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
+            * Math.cos(lat2) * Math.cos(dLon);
+
+    var brng = Math.atan2(y, x);
+
+    brng = brng * (180/Math.PI); // convert to degrees
+    brng = (brng + 360) % 360;
+    brng = 360 - brng;
+
+    return brng;
 }
