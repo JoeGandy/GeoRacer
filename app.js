@@ -95,7 +95,10 @@ var colours = [
     { fill : "rgba(0,150,0,0.5)", stroke : "rgba(0,150,0,0.7)", name : "green"},
     { fill : "rgba(0,0,150,0.5)", stroke : "rgba(0,0,150,0.7)", name : "blue"},
     { fill : "rgba(150,150,0,0.5)", stroke : "rgba(150,150,0,0.7)", name : "yellow"},
-    { fill : "rgba(150,0,150,0.5)", stroke : "rgba(150,0,150,0.7)", name : "pink"}
+    { fill : "rgba(150,0,150,0.5)", stroke : "rgba(150,0,150,0.7)", name : "pink"},
+    { fill : "rgba(150,150,150,0.5)", stroke : "rgba(150,150,150,0.7)", name : "white"},
+    { fill : "rgba(0,0,0,0.5)", stroke : "rgba(0,0,0,0.7)", name : "black"},
+    { fill : "rgba(0,150,150,0.5)", stroke : "rgba(0,150,150,0.7)", name : "cyan"}
 ];
 
 var colour_distribution = 0;
@@ -232,6 +235,18 @@ io.on('connection', function(socket){
         });
     });
 
+    socket.on('player_scored', function(obj){
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            if(obj.username == e.username){
+                Public_Lobbies[obj.lobby_id].players[index].current_objective = obj.current_objective;        
+                io.to(e.socket_id).emit('ingame_message_s', { username : "SERVER" , input : "You have found an objective!"});        
+            }else{
+                io.to(e.socket_id).emit('player_has_scored', obj);
+                io.to(e.socket_id).emit('ingame_message_s', { username : "SERVER" , input : obj.username + " has found an objective!"});
+            }
+        });
+    });
+
     socket.on('joined_game', function(obj){
         colour_distribution = colour_distribution < colours.length-1 ? colour_distribution+1 : 0;
         obj.socket_id = socket.id;
@@ -260,7 +275,6 @@ io.on('connection', function(socket){
             Public_Lobbies[obj.lobby_id].players[players_length].in_game = 1;
             Public_Lobbies[obj.lobby_id].players[players_length].current_objective = 1;
             Public_Lobbies[obj.lobby_id].players[players_length].colour = colours[colour_distribution];
-            Public_Lobbies[obj.lobby_id].players[players_length].current_objective = 0;
             //Send important info to the client
             io.to(socket.id).emit('get_starting_data',  { colour : colours[colour_distribution], lobby : Public_Lobbies[obj.lobby_id] });
 

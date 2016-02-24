@@ -38,7 +38,7 @@ var start_angle = 34; //manually entered ATM
 var last_angle = start_angle;
 
 var targets = [];
-var current_objective = 0;
+var current_objective = 1;
 var total_objective_count = 0;
 
 var new_message_count = 0;
@@ -201,20 +201,26 @@ function initialize() {
 		if((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100 && Math.abs(correct_heading-panorama.pov.heading) < 50) ||
 			(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 70 && Math.abs(correct_heading-panorama.pov.heading) < 90)){
 				//user has found their objective!
-				if(current_objective < total_objective_count){
+				if(current_objective <= total_objective_count){
 					current_objective++;
 					$("#found_objective").show().delay(5000).fadeOut(3000);
 					$(".objective_box > div > h4 > span").text(targets[current_objective].name);
 					$("#current_objective_count").text(current_objective);
+					$("#row_" + socket.id + " > td:nth-child(2)").text(current_objective);
 			  		var percentage = 100 - ((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng())) / size*100);
 			  		percentage = percentage < 0 ? 0 : percentage;
 			  		percentage = percentage > 100 ? 100 : percentage;
 			  		$("#closeometer input").val(percentage);
+			  		socket.emit('player_scored', { username : username, lobby_id : lobby_id, current_objective : current_objective, socket_id : socket.id });
 				}else{
 					$("#found_objective").text("You have won! well done!");
 					$(".objective_box").hide();
 			}
 		}
+	});
+
+	socket.on('player_has_scored', function(result){
+		$("#row_" + result.socket_id + " > td:nth-child(2)").text(result.current_objective);
 	});
 
   	
@@ -268,6 +274,7 @@ function initialize() {
 			}
 		});
   	});
+
 
 	socket.on('update_player', function(result){
 		update_player(result);
