@@ -276,10 +276,10 @@
 }
 
 /* A quick fix to stop arrows hiding when we move panorama */
-#street_view_container > div.gm-style > div:nth-child(1) > div > div.gmnoprint{
+.gmnoprint{
 	z-index:150 !important;
 }
 
-#street_view_container > div.gm-style > div:nth-child(1) > div > div.gmnoprint > svg > text{
+.gmnoprint > svg > text{
 	display:none !important;
 }

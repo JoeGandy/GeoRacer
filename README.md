@@ -4,15 +4,18 @@ A web-based game, works around google streetview to make a multiplayer game, all
 
 # Things to do
 
-- Finding of the objectives
 - Dynamic random spawn locations
-- Dynamic objectives based on spawn location
 - Display users in streetview more clearly
   - Add labels to their names
-  - Add user colours to easily distinguish other people
-- Implement the rest of the minimap
+- Add win conditions
+	- When the game is won we want to take everyone back to their lobby and let them know who won, possibly a score systemonthis page?
+- Create private games
+- Add features to the lobby such as map select (with a little preview possible)
+
 
 # Main Challenges
 
-- Very little support for name tags on markers, initially tried a library called markers with labels, which was bugged (looking for new solution)
-- Had an issue with google maps locations becoming outdated, need to think how to account for this in the future
+- Very little support for name tags on markers, initially tried a library called markers with labels, which was bugged 
+	- (looking for new solution)
+- Had an issue with google maps locations becoming outdated (i.e. the specific latitute longitude coordinates are no longer used in google maps), 
+	- need to think how to account for this in the future
