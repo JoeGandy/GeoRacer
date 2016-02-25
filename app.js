@@ -12,28 +12,6 @@ var settings = {
     max_players:2
 };
 
-function isPlayerInLobby(player_id){
-    /*
-    for(var x = 0; x < Lobbies.length; x++ ){
-        if(Lobbies[x].players.indexOf(player_id) != -1){
-            return true;
-        }
-    };
-    return false;
-    */
-}
-
-function getPlayerLobby(player_id){
-    /*
-    for(var x = 0; x < Lobbies.length; x++ ){
-        if(Lobbies[x].players.indexOf(player_id) != -1){
-            return Lobbies[x];
-        }
-    };
-    return false;
-    */
-}
-
 function lobby(type){
     this.id = Math.random().toString(36).substring(7); //unused at the moment
     this.type = type;   //O == private, 1 == public

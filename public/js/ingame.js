@@ -23,18 +23,17 @@ $(document).ready(function(){
 
 });
 
+//Assume user is always on this page if they're in a lobby
 var lobby_id = parseInt(window.location.pathname.split( '/' )[2]);
 
 var panorama;
 var map;
 
 var marker_array = new Array();
-
 var markers = {};
 
 var player_count = 0;
-
-var start_angle = 34; //manually entered ATM
+var start_angle = 34;
 var last_angle = start_angle;
 
 var targets = [];
@@ -44,40 +43,21 @@ var total_objective_count = 0;
 var new_message_count = 0;
 var last_loc = 0;
 
-/*
-	Rome targets:
-	41.898961	12.473089	-	Fiumi Fountain
-	41.8981484	12.473024	-	Pantheon
-
-
-
-
-
-
-
-
-
-*/
-
-var minimap_styles = [
-  {
+var minimap_styles = [{
     featureType: "all",
     elementType: "labels",
     stylers: [
       { visibility: "off" }
     ]
-  }
-];
+}];
 
-var panorama_styles = [
-  {
+var panorama_styles = [{
     featureType: "all",
     elementType: "labels",
     stylers: [
       { visibility: "off" }
     ]
-  }
-];
+}];
 
 function initialize() {
 	//Get our username from previous page
@@ -108,11 +88,8 @@ function initialize() {
 	    clickable: false
 	});
 
-
-
   	//Let the server know we are ready
   	socket.emit('joined_game', { lobby_id : lobby_id, username : username, loc : google_start_loc});
-
 
   	//Setup the minimap
   	map = new google.maps.Map(
@@ -132,6 +109,7 @@ function initialize() {
 	    location: google_start_loc,
 	    radius: measure(google_start_loc.lat(),google_start_loc.lng(), google_start_loc.lat() + area_height, google_start_loc.lng())
 	};
+
 	size = measure(google_start_loc.lat() - area_height,google_start_loc.lng(), google_start_loc.lat() + area_height, google_start_loc.lng());
 	service = new google.maps.places.PlacesService(map);
 	service.nearbySearch(request, function(results, status) {
@@ -148,8 +126,6 @@ function initialize() {
 		targets = shuffle(targets); //Randomise the order of the array so people have random objectives
 		$(".objective_box > div > h4 > span").text(targets[current_objective].name);
 	});
-
-	
 
   	var my_marker = new google.maps.Marker({
 		position: google_start_loc,
@@ -180,8 +156,6 @@ function initialize() {
 
 	panorama.setOptions({styles: panorama_styles});
 
-
-
 	panorama.addListener('pov_changed', function() {
 		var current_loc = panorama.getPosition();
 		my_marker.setIcon({
@@ -192,7 +166,6 @@ function initialize() {
 		    fillColor: my_colour.fill,
 		    fillOpacity:100
 		});
-
 		if(panorama.pov.heading >= last_angle+30 || panorama.pov.heading <= last_angle-30){
 			last_angle = panorama.pov.heading;
 			socket.emit('update_my_angle', { username : username, angle : panorama.pov.heading, lobby_id : lobby_id, colour : my_colour});
@@ -275,7 +248,6 @@ function initialize() {
 		});
   	});
 
-
 	socket.on('update_player', function(result){
 		update_player(result);
 	});
@@ -302,16 +274,11 @@ function initialize() {
 		var colour = result.colour;
 		var socket_id = result.socket_id;
 		var current_objective = result.current_objective;
-
 		$("#player_count").text(++player_count);
-
 		var html = "<tr id=\"row_" + socket_id + "\" >" +
 			    		"<td><span style=\"color:" + colour.fill +";\">&#9660;</span>"+ players_name + "</td>" +
-			    		"<td>"+ current_objective + "</td>" +
-			       	"</tr>";
-
+			    		"<td>"+ current_objective + "</td>" +			       	"</tr>";
 		$("#players_current_objectives").html($("#players_current_objectives").html() + html);
-
   		var lat_lng = result.loc;
 		if(!markers[socket_id]) {
 			markers[socket_id] = {};
@@ -458,6 +425,7 @@ function inside_bounds(lat_long, bounds){
 		return true;
 }
 
+//http://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 function shuffle(array) {
   var currentIndex = array.length, temporaryValue, randomIndex;
 
@@ -476,6 +444,9 @@ function shuffle(array) {
 
   return array;
 }
+
+//Adapted it from an answer in ?java?
+//http://stackoverflow.com/questions/3932502/calcute-angle-between-two-latitude-longitude-points
 function angleFromCoordinate(lat1, long1, lat2, long2) {
 
     var dLon = (long2 - long1);
