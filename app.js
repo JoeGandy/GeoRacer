@@ -18,7 +18,7 @@ function lobby(type){
     this.open = 1;      //1 == open, 0 == not open
     this.state = 1;     //0 == ingame, 1 == lobby
     this.players = [];  //Players/sockets in the lobby
-    this.objectives = 10;
+    this.objectives = 5;
 }
 
 function player(socket_id, username){
@@ -33,8 +33,8 @@ function player(socket_id, username){
 var find_private = 0, find_public = 1, inlobby = 2, ingame = 3;
 var Players = new Array([],[],[],[]);
 
-var Public_Lobbies = new Array(new lobby(1), new lobby(1), new lobby(1));
-var Private_Lobbies = new Array(new lobby(2), new lobby(2), new lobby(2));
+var Public_Lobbies = new Array(new lobby(1), new lobby(1), new lobby(1), new lobby(1), new lobby(1), new lobby(1));
+var Private_Lobbies = new Array(new lobby(2), new lobby(2), new lobby(2), new lobby(2), new lobby(2), new lobby(2));
 
 
 app.get('/', function(req, res){
@@ -221,6 +221,22 @@ io.on('connection', function(socket){
             }else{
                 io.to(e.socket_id).emit('player_has_scored', obj);
                 io.to(e.socket_id).emit('ingame_message_s', { username : "SERVER" , input : obj.username + " has found an objective!"});
+            }
+        });
+    });
+
+    socket.on('player_won', function(obj){
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            Public_Lobbies[obj.lobby_id].players[index].current_objective = 0;
+            if(obj.username == e.username){
+                Public_Lobbies[obj.lobby_id].players[index].current_objective = obj.current_objective;
+                Public_Lobbies[obj.lobby_id].open = 1;
+                Public_Lobbies[obj.lobby_id].state = 1;
+                io.to(e.socket_id).emit('ingame_message_s', { username : "SERVER" , input : "You have won the game!"});      
+                io.to(e.socket_id).emit('player_has_won', obj);  
+            }else{
+                io.to(e.socket_id).emit('ingame_message_s', { username : "SERVER" , input : obj.username + " has won the game!"});
+                io.to(e.socket_id).emit('player_has_won', obj);
             }
         });
     });

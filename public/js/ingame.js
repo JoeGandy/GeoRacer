@@ -37,11 +37,13 @@ var start_angle = 34;
 var last_angle = start_angle;
 
 var targets = [];
-var current_objective = 1;
+var current_objective = 1;//TEMP
 var total_objective_count = 0;
 
 var new_message_count = 0;
 var last_loc = 0;
+
+var game_won = false;
 
 var minimap_styles = [{
     featureType: "all",
@@ -59,17 +61,26 @@ var panorama_styles = [{
     ]
 }];
 
+var locations = [
+	new google.maps.LatLng(52.9529907,-1.1864428),
+	new google.maps.LatLng(40.7585818,-73.9850715),
+	new google.maps.LatLng(48.4761604,-81.330506),
+	new google.maps.LatLng(41.2374173,-80.81994),
+	new google.maps.LatLng(43.6404659,-79.3902088),
+	new google.maps.LatLng(55.6756195,12.5683829)
+];
+
 function initialize() {
 	//Get our username from previous page
 	var username = localStorage.getItem("username");
-	var area_height = 0.005;
-	var area_width = 0.008;
+	var area_height = 0.004;
+	var area_width = 0.005;
 	var size = 0;
 	//Set up socket connection, stating where we are from and our username
 	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
 	//Currently a static start location, will be automatic in future
-  	var google_start_loc = new google.maps.LatLng(52.9529907,-1.1864428);
+  	var google_start_loc = new google.maps.LatLng(55.6756195,12.5683829);
 
   	var my_colour = { fill : "rgba(50,0,0,0.3)", stroke : "rgba(50,0,0,0.5)", name : "grey"};
 
@@ -174,7 +185,11 @@ function initialize() {
 		if((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100 && Math.abs(correct_heading-panorama.pov.heading) < 50) ||
 			(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 70 && Math.abs(correct_heading-panorama.pov.heading) < 90)){
 				//user has found their objective!
-				if(current_objective <= total_objective_count){
+				if(current_objective < total_objective_count){
+					if(current_objective == total_objective_count){
+						//The Game is won!
+						
+					}
 					current_objective++;
 					$("#found_objective").show().delay(5000).fadeOut(3000);
 					$(".objective_box > div > h4 > span").text(targets[current_objective].name);
@@ -186,14 +201,25 @@ function initialize() {
 			  		$("#closeometer input").val(percentage);
 			  		socket.emit('player_scored', { username : username, lobby_id : lobby_id, current_objective : current_objective, socket_id : socket.id });
 				}else{
-					$("#found_objective").text("You have won! well done!");
-					$(".objective_box").hide();
-			}
+					if(!game_won){
+						game_won = true;
+						$(".objective_box > div > h4 > span").text("No more objectives, you won!");
+				  		socket.emit('player_won', { username : username, lobby_id : lobby_id, socket_id : socket.id });
+					}
+				}
 		}
 	});
 
 	socket.on('player_has_scored', function(result){
 		$("#row_" + result.socket_id + " > td:nth-child(2)").text(result.current_objective);
+	});
+
+	socket.on('player_has_won', function(result){
+		$("#found_objective p").text(result.username + " has won the game! You'll be returned to the lobby in a few seconds")
+		$("#found_objective").show().delay(7000).fadeOut(3000);
+		window.setTimeout(function(){
+			window.location.href = '../lobby/' + lobby_id;
+		},8000);
 	});
 
   	
