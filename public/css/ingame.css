@@ -194,7 +194,8 @@
 }
 
 .gm-style > div:nth-child(10){
- display:none;
+	display:block !important;
+	z-index:200;
 }
 
 #back_to_start{
@@ -274,12 +275,10 @@
 	position:relative;
 	width:100%;
 }
-
-/* A quick fix to stop arrows hiding when we move panorama */
-.gmnoprint{
+div.gm-style div.gmnoprint {
 	z-index:150 !important;
 }
 
-.gmnoprint > svg > text{
+div.gm-style > div:nth-child(10){
 	display:none !important;
 }

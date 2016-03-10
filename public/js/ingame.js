@@ -25,6 +25,7 @@ $(document).ready(function(){
 
 //Assume user is always on this page if they're in a lobby
 var lobby_id = parseInt(window.location.pathname.split( '/' )[2]);
+var location_id = parseInt(window.location.pathname.split( '/' )[3]);
 
 var panorama;
 var map;
@@ -62,12 +63,12 @@ var panorama_styles = [{
 }];
 
 var locations = [
-	new google.maps.LatLng(52.9529907,-1.1864428),
-	new google.maps.LatLng(40.7585818,-73.9850715),
-	new google.maps.LatLng(48.4761604,-81.330506),
-	new google.maps.LatLng(41.2374173,-80.81994),
-	new google.maps.LatLng(43.6404659,-79.3902088),
-	new google.maps.LatLng(55.6756195,12.5683829)
+	new google.maps.LatLng(52.9529907,-1.1864428),//Nottingham England
+	new google.maps.LatLng(40.7585818,-73.9850715),//New York, America
+	new google.maps.LatLng(48.4761604,-81.330506),//Timmins, Canda
+	new google.maps.LatLng(41.2374173,-80.81994),//Warren, America
+	new google.maps.LatLng(43.6404659,-79.3902088),//Torronto, Canda
+	new google.maps.LatLng(55.6756195,12.5683829)//Copenhagen, Denmark
 ];
 
 function initialize() {
@@ -80,7 +81,7 @@ function initialize() {
 	var socket = io.connect(window.location.origin,{query:'page=3&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
 
 	//Currently a static start location, will be automatic in future
-  	var google_start_loc = new google.maps.LatLng(55.6756195,12.5683829);
+  	var google_start_loc = locations[location_id];
 
   	var my_colour = { fill : "rgba(50,0,0,0.3)", stroke : "rgba(50,0,0,0.5)", name : "grey"};
 
@@ -160,9 +161,12 @@ function initialize() {
           		heading: start_angle,
           		pitch: 0
         	},
-			mapTypeControl: false,
-			scaleControl: false,
-			rotateControl: false
+        	addressControl: false,
+      		visible: true,
+      		enableCloseButton: false,
+      		panControl: false,
+      		streetNamesEnabled: false
+
     });
 
 	panorama.setOptions({styles: panorama_styles});

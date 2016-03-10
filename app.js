@@ -6,6 +6,14 @@ var jade = require('jade');
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
+var locations = [
+    "Nottingham England", 
+    "New York, America", 
+    "Timmins, Canda", 
+    "Warren, America", 
+    "Torronto, Canda", 
+    "Copenhagen, Denmark"
+];
 
 var settings = {
     min_players:1,
@@ -19,6 +27,8 @@ function lobby(type){
     this.state = 1;     //0 == ingame, 1 == lobby
     this.players = [];  //Players/sockets in the lobby
     this.objectives = 5;
+    this.locations = [];
+    this.locations_votes = [0,0,0,0,0,0]
 }
 
 function player(socket_id, username){
@@ -37,6 +47,24 @@ var Public_Lobbies = new Array(new lobby(1), new lobby(1), new lobby(1), new lob
 var Private_Lobbies = new Array(new lobby(2), new lobby(2), new lobby(2), new lobby(2), new lobby(2), new lobby(2));
 
 
+/*
+                
+*/
+
+Public_Lobbies.forEach(function(element, index, array){
+    var temp_locations = locations.slice();
+    var current_locations = [];
+    for(var x = 1; x < 4; x++){
+        var index = Math.floor((Math.random() * temp_locations.length) + 0);
+        while(current_locations.indexOf(index) > -1){
+            index = Math.floor((Math.random() * temp_locations.length) + 0);
+        }
+        current_locations.push(index);
+        element.locations.push({ text : temp_locations[index], index : index });
+    }
+});
+
+
 app.get('/', function(req, res){
     res.render('index.html');
 });
@@ -48,7 +76,7 @@ app.get('/lobby/:lobby_id', function(req, res) {
 });
 
 
-app.get('/ingame/:game_id', function(req, res) {
+app.get('/ingame/:game_id/:map_id', function(req, res) {
     //res.send("lobby_id is set to " + req.params.lobby_id);
     res.render('ingame', {lobby_id : req.params.lobby_id});
 });
@@ -136,10 +164,14 @@ io.on('connection', function(socket){
                 io.to(player.socket_id).emit('player_joined', { username : username});
                 io.to(player.socket_id).emit('lobby_message_s', { username : username, input : " >> has joined the lobby << "});
             });
+            //Submit lobby info to player
+            io.to(socket.id).emit('lobby_info', Public_Lobbies[lobby_id]);
 
             console.log("IN LOBBY: Creating the player in storage");
             Public_Lobbies[lobby_id].players.push(new player(socket.id, username));
             
+
+
             Players[inlobby].push(socket.id);
 
             //In Game code here
@@ -199,11 +231,22 @@ io.on('connection', function(socket){
             Public_Lobbies[obj.lobby_id].state = 0;
             io.to(e.socket_id).emit('s_start_game', obj );
         });
+        Public_Lobbies[obj.lobby_id].locations_votes = [0,0,0,0,0,0];
     });
 
     socket.on('lobby_message_c', function(obj){
         Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
             io.to(e.socket_id).emit('lobby_message_s', obj );
+        });
+    });
+
+    socket.on('vote_made', function(obj){
+        if(obj.last_vote != 0)
+            Public_Lobbies[obj.lobby_id].locations_votes[obj.last_index] -= 1;
+        Public_Lobbies[obj.lobby_id].locations_votes[obj.new_index] += 1;
+
+        Public_Lobbies[obj.lobby_id].players.forEach(function(e, index){
+            io.to(e.socket_id).emit('vote_has_been_made', obj );
         });
     });
 

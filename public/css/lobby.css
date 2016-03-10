@@ -66,3 +66,7 @@
 .lobby_chat .sendbutton .btn{
 	width:100%;
 }
+
+.right{
+    float:right;
+}
