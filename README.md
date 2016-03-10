@@ -4,13 +4,9 @@ A web-based game, works around google streetview to make a multiplayer game, all
 
 # Things to do
 
-- Dynamic random spawn locations
 - Display users in streetview more clearly
   - Add labels to their names
-- Add win conditions
-	- When the game is won we want to take everyone back to their lobby and let them know who won, possibly a score systemonthis page?
 - Create private games
-- Add features to the lobby such as map select (with a little preview possible)
 
 
 # Main Challenges
