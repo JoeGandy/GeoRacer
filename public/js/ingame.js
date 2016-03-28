@@ -38,6 +38,7 @@ var start_angle = 34;
 var last_angle = start_angle;
 
 var targets = [];
+var target_markers = [];
 var current_objective = 1;//TEMP
 var total_objective_count = 0;
 
@@ -72,6 +73,8 @@ var locations = [
 ];
 
 function initialize() {
+	loadScript('/js/mwl.js', function(){});
+
 	//Get our username from previous page
 	var username = localStorage.getItem("username");
 	var area_height = 0.004;
@@ -128,15 +131,25 @@ function initialize() {
 		for(var x = 0; x < results.length; x++){
 			if(inside_bounds(results[x].geometry.location, bounds)){
 				targets.push({lat_long : results[x].geometry.location, name : results[x].name});
-			  	new google.maps.Marker({
+			  	/*new google.maps.Marker({
 					position: results[x].geometry.location,
 					map: map,
 					title: results[x].name
-				});
+				});*/
 			}
 		}
 		targets = shuffle(targets); //Randomise the order of the array so people have random objectives
 		$(".objective_box > div > h4 > span").text(targets[current_objective].name);
+
+		for(var x =0; x < targets.length; x++){
+			target_markers.push (new google.maps.Marker({
+					position: targets[x].lat_long,
+					map: null,
+					title: targets[x].name,
+					icon: '/img/target.png'
+				}));
+		}
+
 	});
 
   	var my_marker = new google.maps.Marker({
@@ -186,8 +199,14 @@ function initialize() {
 			socket.emit('update_my_angle', { username : username, angle : panorama.pov.heading, lobby_id : lobby_id, colour : my_colour});
 		}
 		var correct_heading = angleFromCoordinate(current_loc.lat(), current_loc.lng(), targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng());
-		if((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100 && Math.abs(correct_heading-panorama.pov.heading) < 50) ||
-			(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 70 && Math.abs(correct_heading-panorama.pov.heading) < 90)){
+
+		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 120){
+			target_markers[current_objective].setMap(panorama);
+		}
+
+		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100){
+			if(Math.abs(correct_heading-panorama.pov.heading) < 70){
+				target_markers[current_objective].setMap(null);
 				//user has found their objective!
 				if(current_objective < total_objective_count){
 					if(current_objective == total_objective_count){
@@ -211,6 +230,7 @@ function initialize() {
 				  		socket.emit('player_won', { username : username, lobby_id : lobby_id, socket_id : socket.id });
 					}
 				}
+			}
 		}
 	});
 
@@ -222,7 +242,7 @@ function initialize() {
 		$("#found_objective p").text(result.username + " has won the game! You'll be returned to the lobby in a few seconds")
 		$("#found_objective").show().delay(7000).fadeOut(3000);
 		window.setTimeout(function(){
-			window.location.href = '../lobby/' + lobby_id;
+			window.location.href = '../../lobby/' + lobby_id;
 		},8000);
 	});
 
@@ -301,6 +321,10 @@ function initialize() {
 
 	socket.on('player_has_joined', function(result){
 		var players_name = result.username;
+		if(!players_name){
+			players_name = "Guest_" + Math.floor((Math.random() * 10000000) + 1);;
+		}
+
 		var colour = result.colour;
 		var socket_id = result.socket_id;
 		var current_objective = result.current_objective;
@@ -309,36 +333,38 @@ function initialize() {
 			    		"<td><span style=\"color:" + colour.fill +";\">&#9660;</span>"+ players_name + "</td>" +
 			    		"<td>"+ current_objective + "</td>" +			       	"</tr>";
 		$("#players_current_objectives").html($("#players_current_objectives").html() + html);
-  		var lat_lng = result.loc;
-		if(!markers[socket_id]) {
-			markers[socket_id] = {};
-			markers[socket_id]['panorama'] = new google.maps.Marker({
-		      	position: lat_lng,
-		      	map: panorama,
-			    icon: {
-			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-			      	scale: 13,
-			      	rotation: 0,
-			      	strokeColor: colour.stroke,
-				    fillColor:  colour.fill,
-				    fillOpacity:1
-			    },
-		      	title: socket_id
-		  	});
-			markers[socket_id]['map'] = new google.maps.Marker({
-		      	position: lat_lng,
-		      	map: map,
-			    icon: {
-			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-			      	scale: 4,
-			      	rotation: 0,
-			      	strokeColor: colour.stroke,
-				    fillColor:  colour.fill,
-				    fillOpacity:1
-			    },
-		      	title: socket_id
-		  	});
-		}
+  		var lat_lng = new google.maps.LatLng(result.loc.lat,result.loc.lng)
+		markers[socket_id] = {};
+		markers[socket_id]['panorama'] = new MarkerWithLabel({
+		  	position: lat_lng,
+		    map: panorama,
+			labelContent: players_name,
+			labelAnchor: new google.maps.Point(30, 30),
+			labelClass: "labels", // the CSS class for the label
+			labelStyle: {opacity: 0.75},
+		    icon: {
+		      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+		      	scale: 13,
+		      	rotation: 0,
+		      	strokeColor: colour.stroke,
+			    fillColor: colour.fill,
+			    fillOpacity:1
+		    },
+		     	title: socket_id
+		});
+		markers[socket_id]['map'] = new google.maps.Marker({
+		     	position: lat_lng,
+		     	map: map,
+		    icon: {
+		      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+		      	scale: 4,
+		      	rotation: 0,
+		      	strokeColor: colour.stroke,
+			    fillColor: colour.fill,
+			    fillOpacity:1
+		    },
+		   	title: socket_id
+		});
 	});
 
   	//Add new message to the chat box
@@ -389,13 +415,17 @@ function initialize() {
 		var socket_id = result.socket_id;
 		var colour = result.colour;
 		var players_name = result.username;
-  		var lat_lng = result.loc;
+  		var lat_lng = new google.maps.LatLng(result.loc.lat,result.loc.lng);
 		//If no marker yet, set one up
 		if(!markers[socket_id]) {
 			markers[socket_id] = {};
-			markers[socket_id]['panorama'] = new google.maps.Marker({
+			markers[socket_id]['panorama'] = new MarkerWithLabel({
 		      	position: lat_lng,
 		      	map: panorama,
+				labelContent: players_name,
+				labelAnchor: new google.maps.Point(30, 30),
+				labelClass: "labels", // the CSS class for the label
+				labelStyle: {opacity: 0.75},
 			    icon: {
 			      	path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
 			      	scale: 13,
@@ -419,10 +449,9 @@ function initialize() {
 			    },
 		      	title: socket_id
 		  	});
-		} else { //else update the current markers we have
-			markers[socket_id]['panorama'].setPosition(lat_lng);
-			markers[socket_id]['map'].setPosition(lat_lng);
 		}
+		markers[socket_id]['map'].setPosition(lat_lng);
+		markers[socket_id]['panorama'].setPosition(lat_lng);
 	}
 
 	$("#back_to_start_button").click(function(){
@@ -492,4 +521,20 @@ function angleFromCoordinate(lat1, long1, lat2, long2) {
     brng = 360 - brng;
 
     return brng;
+}
+function loadScript(url, callback)
+{
+    // Adding the script tag to the head as suggested before
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+
+    // Then bind the event to the callback function.
+    // There are several events for cross browser compatibility.
+    script.onreadystatechange = callback;
+    script.onload = callback;
+
+    // Fire the loading
+    head.appendChild(script);
 }

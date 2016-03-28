@@ -1,0 +1,195 @@
+    <% include ../views/partials/header.ejs %>
+	    <div class="container" id="lobby">
+	        <div class="row">
+	            <div class="col-xs-3">
+	            	<h4>GeoRacer Private lobby</h4>
+	            </div>
+	            <div class="col-xs-3 col-xs-offset-6 align_right">
+	            	<h4>Current Players:</h4>
+	            </div>
+	        </div>
+	        <div class="row">
+	        	<div class="col-xs-8 lobby_left">
+	        		<div class="row">
+		        		<div class="col-xs-5 lobby_buttons">
+		        			<a id="start_game" href="" class="btn btn-sm btn-primary">Start Game</a>
+		        			<a id="invite_players" class="btn btn-sm btn-primary">Invite Player</a>
+		        			<a id="change_name" class="btn btn-sm btn-primary">Change Name</a>
+		        			<a href="#" class="btn btn-sm btn-danger">Leave Game</a>
+		        		</div>
+		        		<div class="col-xs-6 lobby_buttons">
+		        			Vote for the location you want to start at: <br><br>
+		        			<a id="location_1" class="btn btn-sm btn-primary">2</a><br>
+		        			<a id="location_2" class="btn btn-sm btn-primary">2</a><br>
+		        			<a id="location_3" class="btn btn-sm btn-primary">2</a>
+		        			<!--Please note that the game is not currently working and is purely for lobby functionality demonstration-->
+		        		</div>
+		        	</div>
+	        		<div class="row">
+		        		<div class="col-xs-12 lobby_chat">
+		        			<div class="col-xs-12 output">
+		        			</div>
+		        			<div class="col-xs-10 inputbox">
+		        				<input id="chat_input" type="text"/>
+		        			</div>
+		        			<div class="col-xs-2 sendbutton">
+		        				<a id="send_message" class="btn btn-sm btn-primary">Send</a>
+		        			</div> 
+		        		</div>
+		        	</div>
+	        	</div>
+	        	<div class="col-xs-3 col-xs-offset-1 lobby_players">
+	        		<a id="player_name" class="btn btn-sm btn-primary">Player 1 name</a>
+	        		<div class="other_users">
+	        			
+	        		</div>
+	        	</div>
+	    </div>
+	    <script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
+	    <script src="/js/bootstrap.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+	    <script>
+
+
+	    	$(document).ready(function(){
+				var username = localStorage.getItem("username");
+	    		
+	    		$("#invite_players").click(function(){
+			    	prompt("Give the following link to other players", window.location);
+	    		});
+
+	    		if(!username){
+		    		//prompt user for their name
+				    username = prompt("Please enter your name", "Joe");
+				    while (username == "" || username == null) {
+				    	//Maybe add verfication to ensure username doesnt already exsists (extra)
+				        username = prompt("Please enter your name", "Joe");
+				    }
+				}
+
+				$("#change_name").click(function(){
+				    username = prompt("Please enter your name", username);
+				    while (username == "" || username == null) {
+				    	//Maybe add verfication to ensure username doesnt already exsists (extra)
+				        username = prompt("Please enter your name", username);
+				    }
+					localStorage.setItem("username", username);
+				});
+
+			    //Show their name in the blue box
+			    $("#player_name").text(username);
+
+			    //get lobby id from url
+		    	var lobby_id = parseInt(window.location.pathname.split( '/' )[2]);
+
+		    	//open socket
+			  	var socket = io.connect(window.location.origin,{query:'page=4&lobby_id='+lobby_id+'&username='+username}); //page=2 means show we're in a lobby
+
+			  	socket.on('lobby_info', function(lobby){
+			  		lobby.locations.forEach(function(element, index, array){
+			  			console.log(lobby.locations_votes[element.index] + " - " + element.index);
+			  			$("#location_" + (index+1)).html(element.text + "<span class=\"right\">Votes: <span id=\"votes_" + (index+1) + "\"> " + lobby.locations_votes[element.index] + " </span></span>");
+			  			$("#location_" + (index+1)).data("index", element.index);
+			  		});
+			  	});
+
+			  	//add to right pannel when a player joins
+			  	socket.on('player_joined', function(result){
+			  		var players_name = result.username;
+					$(".other_users").append("<a class=\"btn btn-sm btn-default "+players_name+"\">"+ players_name + "</a>")
+			  	});
+
+			  	//remove from right pannel when a player leaves
+			  	socket.on('player_left', function(result){
+			  		var players_name = result.username;
+					$("." + players_name).remove();
+			  	});
+
+			  	//remove from right pannel when a player leaves
+			  	socket.on('lobby_message_s', function(result){
+			  		console.log(result);
+			  		$(".lobby_chat .output").html($(".lobby_chat .output").html() + result.username + " : " + result.input + "<br>");
+			  	});
+
+			  	//remove from right pannel when a player leaves
+			  	socket.on('s_start_game', function(result){
+					localStorage.setItem("username", username);
+					var top = -1;
+					var top_index = null;
+					for(var x = 1; x < 4; x++){
+						if(parseInt($("#votes_" + x).text()) > top){
+							top = parseInt($("#votes_" + x).text());
+							top_index = $("#location_" + x).data("index");
+						}
+						console.log(top + " - " + top_index);
+					}
+    				window.location = "/ingame/" + lobby_id + "/" + top_index;
+			  	});
+
+			  	$("#chat_input").keyup(function(event){
+				    if(event.keyCode == 13){
+				        $("#send_message").click();
+				    }
+				});
+
+			  	$("#send_message").click(function(e){
+			  		//Get chat message
+			  		var input = $("#chat_input").val();
+			  		if(input == null || input == "")
+    					return;
+    				//Clear old chat message and focus back onto the input box
+    				$("#chat_input").val('').focus();
+    				
+    				socket.emit('lobby_message_c', { input : input, username : $("#player_name").text(), lobby_id : lobby_id});
+			  		
+			  		console.log(input);
+			  	});
+
+			  	$("#start_game").click(function(e){
+    				socket.emit('start_game', { lobby_id : lobby_id});
+			  	});
+
+			  	var last_vote = 0;
+			  	var last_index = 0;
+
+
+			  	$("#location_1").click(function(){
+			  		$("#location_1").addClass("btn-success");
+			  		$("#location_2").removeClass("btn-success");
+			  		$("#location_3").removeClass("btn-success");
+			  		socket.emit('vote_made', { last_vote : last_vote, new_vote : 1, new_index : $(this).data('index'), last_index : last_index , lobby_id : lobby_id});
+			  		last_vote = 1;
+			  		last_index = $(this).data('index');
+			  	});
+
+			  	$("#location_2").click(function(){
+			  		$("#location_2").addClass("btn-success");
+			  		$("#location_1").removeClass("btn-success");
+			  		$("#location_3").removeClass("btn-success");
+			  		socket.emit('vote_made', { last_vote : last_vote, new_vote : 2, new_index : $(this).data('index'), last_index : last_index , lobby_id : lobby_id});
+			  		last_vote = 2;
+			  		last_index = $(this).data('index');
+			  	});
+
+			  	$("#location_3").click(function(){
+			  		$("#location_3").addClass("btn-success");
+			  		$("#location_2").removeClass("btn-success");
+			  		$("#location_1").removeClass("btn-success");
+			  		socket.emit('vote_made', { last_vote : last_vote, new_vote : 3, new_index : $(this).data('index'), last_index : last_index , lobby_id : lobby_id});
+			  		last_vote = 3;
+			  		last_index = $(this).data('index');
+			  	});
+
+				socket.on('vote_has_been_made', function(result){
+					if(result.last_vote != 0)
+			  			$("#votes_" + result.last_vote).text(parseInt($("#votes_" + result.last_vote).text())-1);
+			  		$("#votes_" + result.new_vote).text(parseInt($("#votes_" + result.new_vote).text())+1);
+
+			  	});
+			  	//vote_has_been_made
+	    	});
+
+
+		</script>
+	</body>
+</html>

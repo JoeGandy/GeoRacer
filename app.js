@@ -40,7 +40,7 @@ function player(socket_id, username){
     this.current_objective = 1;
 }
 
-var find_private = 0, find_public = 1, inlobby = 2, ingame = 3;
+var find_private = 0, find_public = 1, inlobby = 2, ingame = 3, inprivatelobby = 4;
 var Players = new Array([],[],[],[]);
 
 var Public_Lobbies = new Array(new lobby(1), new lobby(1), new lobby(1), new lobby(1), new lobby(1), new lobby(1));
@@ -75,6 +75,16 @@ app.get('/lobby/:lobby_id', function(req, res) {
     res.render('lobby', {lobby_id : req.params.lobby_id});
 });
 
+
+app.get('/lobby/:lobby_id', function(req, res) {
+    //res.send("lobby_id is set to " + req.params.lobby_id);
+    res.render('lobby', {lobby_id : req.params.lobby_id});
+});
+
+app.get('/private_lobby/:lobby_id', function(req, res) {
+    //res.send("lobby_id is set to " + req.params.lobby_id);
+    res.render('private_lobby', {lobby_id : req.params.lobby_id});
+});
 
 app.get('/ingame/:game_id/:map_id', function(req, res) {
     //res.send("lobby_id is set to " + req.params.lobby_id);
@@ -116,18 +126,26 @@ io.on('connection', function(socket){
     var active_page = parseInt(socket.handshake.query.page);
     switch(active_page){
         case find_private: //Find Private Game
-            Players[find_private].push(socket.id);
+            console.log("FIND GAME: Finding a free lobby");
+            var lobby_id = -1;
+            for(var x = (Public_Lobbies.length - 1); x >= 0; x--){
+                if(Public_Lobbies[x].players.length == 0){
+                    lobby_id = x;
+                }
+            }
 
-            //Before we find a lobby we need to verify all users are here with a ping request of some kind
+            if(lobby_id == -1){
+                console.log("FIND GAME: Could not find a free lobby, please try again later");
+                break;
+            }
+            
+            console.log("FINDGAME: Adding user to the new lobby");
+            
+            Private_Lobbies[lobby_id].open = 0;
 
-            //Find a private lobby here
+            io.to(socket.id).emit('join_lobby', { id:lobby_id });
         break;
-        case find_public: //Find Public Game
-            //socket.id
-
-            //Before we find a lobby we need to verify all users are here with a ping request of some kind
-
-            //Ensure that there is space for this person in a lobby
+        case find_public:
             console.log("FIND GAME: Finding space in a open lobby");
             var lobby_id = -1;
             for(var x = (Public_Lobbies.length - 1); x >= 0; x--){
@@ -140,15 +158,12 @@ io.on('connection', function(socket){
                 console.log("FIND GAME: Could not find a free lobby, please try again later");
                 break;
             }
-
             
             console.log("FINDGAME: Adding user to the free lobby");
             
             Public_Lobbies[lobby_id].open = 0;
 
             io.to(socket.id).emit('join_lobby', { id:lobby_id });
-
-            //Find a public lobby here
         break;
         case inlobby: //InLobby
             //Get data from initial connect
@@ -171,6 +186,30 @@ io.on('connection', function(socket){
             Public_Lobbies[lobby_id].players.push(new player(socket.id, username));
             
 
+
+            Players[inlobby].push(socket.id);
+
+            //In Game code here
+        break;
+        case inprivatelobby: //InLobby
+            //Get data from initial connect
+            var username = socket.handshake.query.username;
+            var lobby_id = socket.handshake.query.lobby_id;
+
+            console.log("IN LOBBY: Now " + username + " has joined, let everyone know");
+            //Emit to other players that someone has joined
+            Private_Lobbies[lobby_id].players.forEach(function(player, index){
+                //tell this player of other users that are present
+                io.to(socket.id).emit('player_joined', { username : player.username});
+                //tell other players that this user has joined
+                io.to(player.socket_id).emit('player_joined', { username : username});
+                io.to(player.socket_id).emit('lobby_message_s', { username : username, input : " >> has joined the lobby << "});
+            });
+            //Submit lobby info to player
+            io.to(socket.id).emit('lobby_info', Private_Lobbies[lobby_id]);
+
+            console.log("IN LOBBY: Creating the player in storage");
+            Private_Lobbies[lobby_id].players.push(new player(socket.id, username));
 
             Players[inlobby].push(socket.id);
 

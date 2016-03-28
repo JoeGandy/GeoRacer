@@ -282,3 +282,12 @@ div.gm-style div.gmnoprint {
 div.gm-style > div:nth-child(10){
 	display:none !important;
 }
+ .labels {
+   color: white;
+   background-color: black;
+   font-size: 12px;
+   font-weight: bold;
+   text-align: center;
+   width: 60px;     
+   white-space: nowrap;
+ }
