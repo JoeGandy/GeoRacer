@@ -200,19 +200,27 @@ function initialize() {
 		}
 		var correct_heading = angleFromCoordinate(current_loc.lat(), current_loc.lng(), targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng());
 
-		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 120){
+		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100){
 			target_markers[current_objective].setMap(panorama);
+			target_markers[current_objective].addListener('click', function() {
+			    current_objective++;
+				$("#found_objective").show().delay(5000).fadeOut(3000);
+				$(".objective_box > div > h4 > span").text(targets[current_objective].name);
+				$("#current_objective_count").text(current_objective);
+				$("#row_" + socket.id + " > td:nth-child(2)").text(current_objective);
+			  	var percentage = 100 - ((measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng())) / size*100);
+			  	percentage = percentage < 0 ? 0 : percentage;
+			  	percentage = percentage > 100 ? 100 : percentage;
+			  	$("#closeometer input").val(percentage);
+			  	socket.emit('player_scored', { username : username, lobby_id : lobby_id, current_objective : current_objective, socket_id : socket.id });
+			});
 		}
 
 		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100){
-			if(Math.abs(correct_heading-panorama.pov.heading) < 70){
+			if(Math.abs(correct_heading-(-1 * panorama.pov.heading)) < 70){
 				target_markers[current_objective].setMap(null);
 				//user has found their objective!
 				if(current_objective < total_objective_count){
-					if(current_objective == total_objective_count){
-						//The Game is won!
-						
-					}
 					current_objective++;
 					$("#found_objective").show().delay(5000).fadeOut(3000);
 					$(".objective_box > div > h4 > span").text(targets[current_objective].name);
@@ -251,6 +259,16 @@ function initialize() {
 	panorama.addListener('position_changed', function() {
 		//var bounds = {north: 41.902, south: 41.896, east: 12.480,west: 12.469};
 		var current_loc = panorama.getPosition();
+
+		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 120){
+			target_markers[current_objective].setMap(panorama);
+		}
+
+		if(measure(targets[current_objective].lat_long.lat(), targets[current_objective].lat_long.lng(), current_loc.lat(), current_loc.lng()) < 100){
+			if(Math.abs(correct_heading-(-1 * panorama.pov.heading)) < 70){
+				target_markers[current_objective].setMap(null);
+			}
+		}
 		map.setCenter(current_loc);
 		my_marker.setPosition(current_loc);
   		socket.emit('update_my_position', { username : username, loc : current_loc, lobby_id : lobby_id, colour : my_colour});
@@ -514,14 +532,15 @@ function angleFromCoordinate(lat1, long1, lat2, long2) {
     var x = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1)
             * Math.cos(lat2) * Math.cos(dLon);
 
-    var brng = Math.atan2(y, x);
-
-    brng = brng * (180/Math.PI); // convert to degrees
-    brng = (brng + 360) % 360;
-    brng = 360 - brng;
-
+    var brng = toDegrees(Math.atan2(y, x));
+    console.log(brng);
     return brng;
 }
+
+function toDegrees (angle) {
+  return angle * (180 / Math.PI);
+}
+
 function loadScript(url, callback)
 {
     // Adding the script tag to the head as suggested before
